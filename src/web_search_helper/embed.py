@@ -10,6 +10,7 @@ everything past its token limit), and a passage scores the best cosine of its
 windows. The end offset of each window is kept: it tells the page WHERE in a
 passage the answer is, and it bounds the excerpt the server sends back.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -30,8 +31,8 @@ DEFAULT_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 
 
 class Embedder(Protocol):
-    name: str          # Python-side model name
-    browser: str       # transformers.js model id
+    name: str  # Python-side model name
+    browser: str  # transformers.js model id
     dim: int
 
     def windows(self, text: str) -> list[int]:
@@ -50,7 +51,8 @@ class SentenceTransformerEmbedder:
         if browser is None and name not in MODELS:
             raise ValueError(
                 f"no known transformers.js twin for {name!r}; pass browser=… "
-                f"(known: {', '.join(sorted(set(MODELS)))})")
+                f"(known: {', '.join(sorted(set(MODELS)))})"
+            )
         self.name = name
         self.browser = browser or MODELS[name]
         self.model = SentenceTransformer(name)
@@ -66,19 +68,18 @@ class SentenceTransformerEmbedder:
         saved = tok.model_max_length
         tok.model_max_length = int(1e9)
         try:
-            spans = tok(text, add_special_tokens=False,
-                        return_offsets_mapping=True)["offset_mapping"]
+            spans = tok(text, add_special_tokens=False, return_offsets_mapping=True)["offset_mapping"]
         finally:
             tok.model_max_length = saved
-        ends = [spans[min(k + self.window, len(spans)) - 1][1]
-                for k in range(0, len(spans), self.window)]
+        ends = [spans[min(k + self.window, len(spans)) - 1][1] for k in range(0, len(spans), self.window)]
         # The last window runs to the end of the text: the tokenizer stops at
         # the last non-blank character, and a final sentence would fall out.
         return (ends[:-1] + [len(text)]) if ends else [len(text)]
 
     def encode(self, texts: list[str]) -> np.ndarray:
-        return self.model.encode(texts, normalize_embeddings=True, batch_size=64,
-                                 show_progress_bar=False).astype(np.float32)
+        return self.model.encode(
+            texts, normalize_embeddings=True, batch_size=64, show_progress_bar=False
+        ).astype(np.float32)
 
 
 class HashEmbedder:

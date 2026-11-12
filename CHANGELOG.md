@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+- Joins the AI Helpers suite: agent skill (`skills/web-search-helper/`),
+  `CITATION.cff`, CI running the PHP parity test on every push.
+- English tested like French: parity test over both languages; on the
+  book this tool was extracted from, 15/15 English and 19/19 French guard
+  questions fall on the right side (answer or refusal).
+- Bilingual demo page (`?lang=fr` / `?lang=en`).
+- Default `sec_min` 0.561, the value measured on that book.
+- `bench` warns when pcov or xdebug distorts the timing.
+- `install` accepts an index built straight into the site folder.
+
 ## [0.1.0] — 2026-11-12
 
 First version, extracted from the search engine of a book's companion

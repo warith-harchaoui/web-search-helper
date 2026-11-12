@@ -41,8 +41,8 @@ def test_typo_finds_the_word(index):
 
 
 def test_one_word_needs_presence(index):
-    assert search(index, "agent")["sure"]          # in many passages
-    assert not search(index, "zéphyr3")["sure"]    # in one passage only
+    assert search(index, "agent")["sure"]  # in many passages
+    assert not search(index, "zéphyr3")["sure"]  # in one passage only
 
 
 def test_excerpts_never_exceed_two_windows(index, embedder):
@@ -51,3 +51,14 @@ def test_excerpts_never_exceed_two_windows(index, embedder):
     for h in r["hits"]:
         assert 1 <= len(h["o"]) <= 2
         assert h["o"][-1] == len(h["text"])
+
+
+def test_english(index_en, embedder):
+    r = search(index_en, "What is the parable of the elephant?")
+    assert r["sure"] and "parable" in r["hits"][0]["text"]
+    assert search(index_en, "the parabel of the elefant")["terms"][:2] == ["parable", "elephant"]
+    assert not search(index_en, "the recipe for apple pie")["sure"]
+    assert search(index_en, "agent")["sure"] and not search(index_en, "zephyr3")["sure"]
+    q = "audit of permissions"
+    for h in search(index_en, q, embedder.encode([q])[0])["hits"]:
+        assert h["text"] in "".join(p["t"] for p in index_en.passages)

@@ -4,6 +4,7 @@ The PHP file answers visitors; the Python twin measures thresholds and is what
 the rest of the tests trust. If they drift, calibration measures a rule the
 site does not apply.
 """
+
 import json
 import subprocess
 
@@ -15,17 +16,30 @@ from web_search_helper.index import save
 from web_search_helper.site import asset
 from web_search_helper.text import stopwords, tokenize
 
-QUESTIONS = [
-    "Quelle est la parabole de l'éléphant ?",
-    "la parabol de l'elefant",            # typos
-    "Qu'est-ce que le mur des données ?",
-    "agent",                              # one word, frequent
-    "zéphyr3",                            # one word, rare
-    "la recette du cassoulet toulousain", # outside
-    "audit des permissions",
-    "le la les",                          # stopwords only
-    "Œuvre à Noël ÉLÉPHANT",
-]
+QUESTIONS = {
+    "fr": [
+        "Quelle est la parabole de l'éléphant ?",
+        "la parabol de l'elefant",  # typos
+        "Qu'est-ce que le mur des données ?",
+        "agent",  # one word, frequent
+        "zéphyr3",  # one word, rare
+        "la recette du cassoulet toulousain",  # outside
+        "audit des permissions",
+        "le la les",  # stopwords only
+        "Œuvre à Noël ÉLÉPHANT",
+    ],
+    "en": [
+        "What is the parable of the elephant?",
+        "the parabel of the elefant",  # typos
+        "What is the data wall?",
+        "agent",
+        "zephyr3",
+        "the recipe for apple pie",  # outside
+        "audit of permissions",
+        "the a of",  # stopwords only
+        "Governing AGENTS’ permissions",
+    ],
+}
 
 RUNNER = r"""<?php
 define('WSH_NO_MAIN', true);
@@ -43,17 +57,23 @@ echo json_encode(['results' => $out, 'tokens' => array_map(function ($s) use ($I
 
 
 @pytest.fixture(scope="module")
-def php_results(php, index, embedder, tmp_path_factory):
+def php_results(php, lang_index, embedder, tmp_path_factory):
+    index = lang_index
     d = tmp_path_factory.mktemp("parity")
-    path = save(index, d / "fr.php")
+    path = save(index, d / f"{index.lang}.php")
     runner = d / "runner.php"
     runner.write_text(RUNNER, encoding="utf-8")
     cases = []
-    for q in QUESTIONS:
+    for q in QUESTIONS[index.lang]:
         cases.append({"q": q, "v": None})
         cases.append({"q": q, "v": [float(x) for x in embedder.encode([q])[0]]})
-    out = subprocess.run([php, str(runner), str(asset("search.php")), str(path)],
-                         input=json.dumps(cases), capture_output=True, text=True, check=True)
+    out = subprocess.run(
+        [php, str(runner), str(asset("search.php")), str(path)],
+        input=json.dumps(cases),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
     return cases, json.loads(out.stdout)
 
 
@@ -63,13 +83,15 @@ def _norm(v):
     return a / n if n else a
 
 
-def test_tokenization_matches(php_results, index):
+def test_tokenization_matches(php_results, lang_index):
+    index = lang_index
     cases, got = php_results
     for c, toks in zip(cases, got["tokens"]):
         assert toks == tokenize(c["q"], index.stop), c["q"]
 
 
-def test_same_answers(php_results, index):
+def test_same_answers(php_results, lang_index):
+    index = lang_index
     cases, got = php_results
     for c, r in zip(cases, got["results"]):
         qv = None if c["v"] is None else _norm(c["v"]).astype(np.float32)

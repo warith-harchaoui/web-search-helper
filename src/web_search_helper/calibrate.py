@@ -28,6 +28,7 @@ The question vectors here come from the Python model; the page computes them
 with transformers.js. The two agree to about 1e-2 on cosines, which is why a
 margin is reported: a threshold with less margin than that is fragile.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -57,8 +58,19 @@ def measure(idx: Index, questions: list[str], inside: bool, embedder) -> list[Me
     for q, v in zip(questions, vecs):
         kw = lexical(q, idx)
         sem = semantic(v, idx)
-        out.append(Measure(q, inside, bool(kw["terms"]), kw["typed"], kw["df1"], kw["conj"], kw["best"],
-                           sem["top"], sem["sectop"]))
+        out.append(
+            Measure(
+                q,
+                inside,
+                bool(kw["terms"]),
+                kw["typed"],
+                kw["df1"],
+                kw["conj"],
+                kw["best"],
+                sem["top"],
+                sem["sectop"],
+            )
+        )
     return out
 
 
@@ -95,20 +107,33 @@ def calibrate(idx: Index, inside: list[str], outside: list[str], embedder) -> di
     need = [m for m in many if m.inside and not (m.conj and m.best >= th["lex_min"])]
     out_many = [m for m in many if not m.inside]
     for key, attr in (("sem_min", "top"), ("sec_min", "sectop")):
-        v, margin = _halfway([getattr(m, attr) for m in out_many],
-                             [getattr(m, attr) for m in need])
+        v, margin = _halfway([getattr(m, attr) for m in out_many], [getattr(m, attr) for m in need])
         if v is not None:
             th[key] = round(v, 3)
         report["routes"][key] = {"value": th[key], "margin": margin}
 
     wrong = []
     for m in ms:
-        kw = {"terms": [1] if m.has_terms else [], "typed": m.typed, "df1": m.df1, "conj": m.conj, "best": m.best}
+        kw = {
+            "terms": [1] if m.has_terms else [],
+            "typed": m.typed,
+            "df1": m.df1,
+            "conj": m.conj,
+            "best": m.best,
+        }
         got = sure_enough(kw, {"top": m.top, "sectop": m.sectop}, th)
         if got != m.inside:
-            wrong.append({"q": m.q, "expected": "answer" if m.inside else "refuse",
-                          "top": round(m.top, 3), "sectop": round(m.sectop, 3),
-                          "best": round(m.best, 2), "conj": m.conj, "df1": m.df1})
+            wrong.append(
+                {
+                    "q": m.q,
+                    "expected": "answer" if m.inside else "refuse",
+                    "top": round(m.top, 3),
+                    "sectop": round(m.sectop, 3),
+                    "best": round(m.best, 2),
+                    "conj": m.conj,
+                    "df1": m.df1,
+                }
+            )
     report["thresholds"] = th
     report["wrong"] = wrong
     report["n"] = {"inside": len(inside), "outside": len(outside)}

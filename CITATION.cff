@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+title: "web-search-helper: search a private corpus from a website with PHP only"
+message: >-
+  If you use this software in a publication, please cite it as below.
+type: software
+authors:
+  - given-names: Warith
+    family-names: HARCHAOUI
+    email: warithmetics@deraison.ai
+    orcid: "https://orcid.org/0000-0002-3487-7134"
+    affiliation: "Deraison AI"
+repository-code: "https://github.com/warith-harchaoui/web-search-helper"
+url: "https://github.com/warith-harchaoui/web-search-helper"
+abstract: >-
+  web-search-helper indexes a corpus on the author's machine (passages cut
+  into model-sized windows, sentence-transformers embeddings, a BM25 lexical
+  index, section centroids) and serves it from a single PHP endpoint, while
+  the visitor's question is embedded in the browser with transformers.js.
+  The corpus is never published: the endpoint returns short excerpts of the
+  passages that answer, or nothing when a measured rule says the corpus does
+  not treat the question. A Python twin of the PHP engine calibrates the
+  thresholds and is checked against it.
+keywords:
+  - semantic search
+  - BM25
+  - hybrid search
+  - PHP
+  - transformers.js
+  - abstention
+license: BSD-3-Clause
+version: 0.1.0
+date-released: "2026-11-12"

@@ -30,6 +30,7 @@ reads: the lexical index, the section centroids, the window offsets.
 >>> data.startswith(HEADER), from_bytes(data).passages[0]["t"]
 (True, 'Un éléphant dans une pièce.')
 """
+
 from __future__ import annotations
 
 import json
@@ -53,10 +54,10 @@ FORMAT = 1
 #: Thresholds of the "I cannot answer" rule. Defaults are those measured on the
 #: corpus this engine was first built for; `calibrate` measures yours.
 DEFAULT_THRESHOLDS = {
-    "sem_min": 0.55,   # cosine of the best window
-    "sec_min": 0.56,   # cosine of the best section centroid
-    "lex_min": 5.0,    # BM25 of the best passage, when every word was found
-    "df_min": 9,       # one-word query: passages that must contain the word
+    "sem_min": 0.55,  # cosine of the best window
+    "sec_min": 0.561,  # cosine of the best section centroid
+    "lex_min": 5.0,  # BM25 of the best passage, when every word was found
+    "df_min": 9,  # one-word query: passages that must contain the word
 }
 DEFAULT_LIMITS = {"per_hour": 120, "per_day": 400, "q_max": 300}
 DEFAULT_RANKING = {"display_k": 6, "pool_k": 25, "answer_pool": 15, "rrf_k": 60}
@@ -67,8 +68,8 @@ class Index:
     meta: dict
     passages: list[dict]
     section_of: list[int]
-    vectors: np.ndarray            # (n_vec, dim) float32
-    centroids: np.ndarray          # (n_sec, dim) float32
+    vectors: np.ndarray  # (n_vec, dim) float32
+    centroids: np.ndarray  # (n_sec, dim) float32
     words: list[str]
     postings: dict[str, list[tuple[int, int]]]
     lengths: list[int]
@@ -92,10 +93,16 @@ class Index:
         return frozenset(self.meta["stopwords"])
 
 
-def build(passages: list[Passage], embedder: Embedder, lang: str,
-          stop: frozenset[str] | None = None, thresholds: dict | None = None,
-          limits: dict | None = None, ranking: dict | None = None,
-          batch: int = 256) -> Index:
+def build(
+    passages: list[Passage],
+    embedder: Embedder,
+    lang: str,
+    stop: frozenset[str] | None = None,
+    thresholds: dict | None = None,
+    limits: dict | None = None,
+    ranking: dict | None = None,
+    batch: int = 256,
+) -> Index:
     """Cut, embed and index ``passages``."""
     if not passages:
         raise ValueError("empty corpus")
@@ -107,8 +114,9 @@ def build(passages: list[Passage], embedder: Embedder, lang: str,
         ends = embedder.windows(r["t"])
         r["o"] = ends
         texts.extend(window_texts(r["t"], ends))
-    vecs = np.concatenate([embedder.encode(texts[k:k + batch])
-                           for k in range(0, len(texts), batch)]).astype(np.float32)
+    vecs = np.concatenate(
+        [embedder.encode(texts[k : k + batch]) for k in range(0, len(texts), batch)]
+    ).astype(np.float32)
 
     # Sections in order of first appearance; a centroid is the normalised sum
     # of the section's windows. It judges whether a whole SECTION is about the
@@ -119,7 +127,7 @@ def build(passages: list[Passage], embedder: Embedder, lang: str,
     cur = 0
     for r, s in zip(rows, section_of):
         n = len(r["o"])
-        cents[s] += vecs[cur:cur + n].sum(axis=0)
+        cents[s] += vecs[cur : cur + n].sum(axis=0)
         cur += n
     norms = np.linalg.norm(cents, axis=1, keepdims=True)
     cents = np.divide(cents, norms, out=np.zeros_like(cents), where=norms > 0).astype(np.float32)
@@ -154,8 +162,11 @@ def build(passages: list[Passage], embedder: Embedder, lang: str,
 
 
 def to_bytes(idx: Index) -> bytes:
-    meta = json.dumps({**idx.meta, "passages": idx.passages, "section": idx.section_of},
-                      ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    meta = json.dumps(
+        {**idx.meta, "passages": idx.passages, "section": idx.section_of},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
     lex = "\n".join(idx.words).encode("utf-8")
     offsets, blob = [], bytearray()
     for w in idx.words:
@@ -163,23 +174,31 @@ def to_bytes(idx: Index) -> bytes:
         for i, c in idx.postings[w]:
             blob += struct.pack("<IH", i, min(c, 65535))
     offsets.append(len(blob))
-    return b"".join([
-        HEADER, MAGIC, struct.pack("<I", len(meta)), meta,
-        struct.pack("<IIII", len(idx.vectors), len(idx.centroids), len(idx.words), len(blob)),
-        idx.vectors.astype("<f4").tobytes(), idx.centroids.astype("<f4").tobytes(),
-        struct.pack("<I", len(lex)), lex,
-        struct.pack(f"<{len(offsets)}I", *offsets), bytes(blob),
-        struct.pack(f"<{len(idx.lengths)}I", *idx.lengths),
-    ])
+    return b"".join(
+        [
+            HEADER,
+            MAGIC,
+            struct.pack("<I", len(meta)),
+            meta,
+            struct.pack("<IIII", len(idx.vectors), len(idx.centroids), len(idx.words), len(blob)),
+            idx.vectors.astype("<f4").tobytes(),
+            idx.centroids.astype("<f4").tobytes(),
+            struct.pack("<I", len(lex)),
+            lex,
+            struct.pack(f"<{len(offsets)}I", *offsets),
+            bytes(blob),
+            struct.pack(f"<{len(idx.lengths)}I", *idx.lengths),
+        ]
+    )
 
 
 def from_bytes(data: bytes) -> Index:
-    if not data.startswith(HEADER) or data[len(HEADER):len(HEADER) + 4] != MAGIC:
+    if not data.startswith(HEADER) or data[len(HEADER) : len(HEADER) + 4] != MAGIC:
         raise ValueError("not a web-search-helper index")
     o = len(HEADER) + 4
     (lm,) = struct.unpack_from("<I", data, o)
     o += 4
-    meta = json.loads(data[o:o + lm])
+    meta = json.loads(data[o : o + lm])
     o += lm
     n_vec, n_sec, n_words, n_blob = struct.unpack_from("<IIII", data, o)
     o += 16
@@ -190,21 +209,19 @@ def from_bytes(data: bytes) -> Index:
     o += n_sec * dim * 4
     (ll,) = struct.unpack_from("<I", data, o)
     o += 4
-    words = data[o:o + ll].decode("utf-8").split("\n") if ll else []
+    words = data[o : o + ll].decode("utf-8").split("\n") if ll else []
     o += ll
     offsets = struct.unpack_from(f"<{n_words + 1}I", data, o)
     o += 4 * (n_words + 1)
-    blob = data[o:o + n_blob]
+    blob = data[o : o + n_blob]
     o += n_blob
     postings = {}
     for k, w in enumerate(words):
-        postings[w] = [struct.unpack_from("<IH", blob, j)
-                       for j in range(offsets[k], offsets[k + 1], 6)]
+        postings[w] = [struct.unpack_from("<IH", blob, j) for j in range(offsets[k], offsets[k + 1], 6)]
     passages = meta.pop("passages")
     section_of = meta.pop("section")
     lengths = list(struct.unpack_from(f"<{len(passages)}I", data, o))
-    return Index(meta, passages, section_of, np.array(vecs), np.array(cents),
-                 words, postings, lengths)
+    return Index(meta, passages, section_of, np.array(vecs), np.array(cents), words, postings, lengths)
 
 
 def save(idx: Index, path: str | Path) -> Path:

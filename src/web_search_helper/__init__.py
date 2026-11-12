@@ -9,6 +9,7 @@ not treat it.
 >>> callable(wsh.build) and callable(wsh.search)
 True
 """
+
 from __future__ import annotations
 
 __version__ = "0.1.0"
@@ -21,7 +22,21 @@ from .index import Index, build, load, save
 from .site import bench, check_online, install, serve
 
 __all__ = [
-    "DEFAULT_MODEL", "MODELS", "HashEmbedder", "Index", "Passage",
-    "SentenceTransformerEmbedder", "bench", "build", "calibrate", "check_online",
-    "install", "load", "read_corpus", "read_jsonl", "save", "search", "serve",
+    "DEFAULT_MODEL",
+    "MODELS",
+    "HashEmbedder",
+    "Index",
+    "Passage",
+    "SentenceTransformerEmbedder",
+    "bench",
+    "build",
+    "calibrate",
+    "check_online",
+    "install",
+    "load",
+    "read_corpus",
+    "read_jsonl",
+    "save",
+    "search",
+    "serve",
 ]

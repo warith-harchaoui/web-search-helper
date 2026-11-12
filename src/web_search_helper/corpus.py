@@ -18,6 +18,7 @@ Two inputs:
 >>> [(p.doc, p.section, p.text) for p in ps]
 [('Doc', 'Part', 'One two three.')]
 """
+
 from __future__ import annotations
 
 import json
@@ -51,9 +52,15 @@ def read_jsonl(path: str | Path) -> list[Passage]:
         r = json.loads(line)
         if not isinstance(r.get("text"), str) or not r["text"].strip():
             raise ValueError(f"{path}:{n}: 'text' missing or empty")
-        out.append(Passage(r["text"].strip(), str(r.get("doc", "")),
-                           str(r.get("section", "")), str(r.get("url", "")),
-                           dict(r.get("meta") or {})))
+        out.append(
+            Passage(
+                r["text"].strip(),
+                str(r.get("doc", "")),
+                str(r.get("section", "")),
+                str(r.get("url", "")),
+                dict(r.get("meta") or {}),
+            )
+        )
     return out
 
 
@@ -106,8 +113,7 @@ def read_folder(folder: str | Path, target_words: int = 220) -> list[Passage]:
     out: list[Passage] = []
     for f in sorted(folder.rglob("*")):
         if f.suffix.lower() in {".md", ".markdown", ".txt"} and f.is_file():
-            out.extend(passages_from_markdown(f.read_text(encoding="utf-8"),
-                                              f.name, target_words))
+            out.extend(passages_from_markdown(f.read_text(encoding="utf-8"), f.name, target_words))
     return out
 
 

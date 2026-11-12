@@ -1,12 +1,23 @@
 # web-search-helper
 
-[🇫🇷](LISEZMOI.md) · [🇬🇧](README.md)
+[🇫🇷](https://github.com/warith-harchaoui/web-search-helper/blob/main/LISEZMOI.md)&nbsp;&nbsp;|&nbsp;&nbsp;[🇬🇧](https://github.com/warith-harchaoui/web-search-helper/blob/main/README.md)
+
+![License](https://img.shields.io/badge/license-BSD--3--Clause-blue)
+![Python](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue)
+![PHP](https://img.shields.io/badge/server-PHP%20only-777BB4)
+[![tests](https://github.com/warith-harchaoui/web-search-helper/actions/workflows/tests.yml/badge.svg)](https://github.com/warith-harchaoui/web-search-helper/actions/workflows/tests.yml)
 
 **Search a private corpus from a website, with PHP as the only server.** You
 index the corpus on your machine; one PHP file answers the questions; the page
 embeds each question in the browser. The corpus is never published: a visitor
 receives a few sentences of what answers the question, or an honest "I cannot
 answer" and nothing else.
+
+`web-search-helper` belongs to the [**AI Helpers**](https://github.com/warith-harchaoui/ai-helpers)
+suite. It works in French and in English out of the box (stopwords, answer
+composition, interface), one index per language, and in any other language
+with a stopword file. No LLM is involved: the only model is a sentence encoder,
+and the answer is made of the corpus's own sentences.
 
 BSD 3-Clause licence. Author: Warith Harchaoui.
 
@@ -77,7 +88,7 @@ web-search-helper search build/fr.php "Quelle est la parabole de l'éléphant ?"
 # 4. Copy the endpoint, the client and the index into the site; serve it locally.
 web-search-helper install site/ build/fr.php
 cp examples/demo.html site/index.html
-web-search-helper serve site/        # http://127.0.0.1:8765/
+web-search-helper serve site/        # http://127.0.0.1:8765/?lang=fr (or ?lang=en)
 
 # 5. Time the PHP engine; after upload, check that nothing leaks.
 web-search-helper bench build/fr.php

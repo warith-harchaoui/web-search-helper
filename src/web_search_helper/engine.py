@@ -17,6 +17,7 @@ Three signals, two engines, one verdict:
 - **verdict**: answer only if one of three routes says the corpus treats the
   question; otherwise return nothing at all.
 """
+
 from __future__ import annotations
 
 import math
@@ -143,12 +144,14 @@ def lexical(q: str, idx: Index) -> dict:
 def semantic(qv: np.ndarray, idx: Index) -> dict:
     pool_k = idx.meta["ranking"]["pool_k"]
     dots = idx.vectors.astype(np.float64) @ qv.astype(np.float64)
-    best = np.array([dots[a:a + len(p["o"])].max()
-                     for a, p in zip(idx.first_vec, idx.passages)])
+    best = np.array([dots[a : a + len(p["o"])].max() for a, p in zip(idx.first_vec, idx.passages)])
     order = sorted(range(len(best)), key=lambda i: -best[i])
     sec = idx.centroids.astype(np.float64) @ qv.astype(np.float64)
-    return {"ranked": order[:pool_k], "top": float(best[order[0]]),
-            "sectop": float(sec.max()) if len(sec) else -1.0}
+    return {
+        "ranked": order[:pool_k],
+        "top": float(best[order[0]]),
+        "sectop": float(sec.max()) if len(sec) else -1.0,
+    }
 
 
 def sure_enough(kw: dict, sem: dict | None, th: dict) -> bool:
@@ -178,7 +181,7 @@ def rrf(a: list[int], b: list[int], k: int, top: int) -> list[int]:
 
 def _starts_upper(s: str) -> bool:
     # Twin of PHP's /^[«"“(]*[\p{Lu}\p{Lt}0-9]/u.
-    s = s.lstrip("«\"“(")
+    s = s.lstrip('«"“(')
     return bool(s) and (unicodedata.category(s[0]) in ("Lu", "Lt") or s[0] in "0123456789")
 
 
@@ -196,13 +199,13 @@ def excerpt(i: int, qv: np.ndarray | None, terms: list[str], idx: Index) -> dict
     n, nf = len(t), len(o)
     if qv is not None:
         a = idx.first_vec[i]
-        note = [float(x) for x in idx.vectors[a:a + nf].astype(np.float64) @ qv.astype(np.float64)]
+        note = [float(x) for x in idx.vectors[a : a + nf].astype(np.float64) @ qv.astype(np.float64)]
     else:
         tset = set(terms)
         note = []
         for f in range(nf):
             start = o[f - 1] if f else 0
-            note.append(float(sum(1 for w in tokenize(t[start:o[f]]) if w in tset)))
+            note.append(float(sum(1 for w in tokenize(t[start : o[f]]) if w in tset)))
     m = note.index(max(note))
     lo = hi = m
     if nf > 1:
@@ -216,24 +219,29 @@ def excerpt(i: int, qv: np.ndarray | None, terms: list[str], idx: Index) -> dict
     end = o[hi]
     if start > 0:
         for mm in re.finditer(r"[.!?…]\s+", t[start:end]):
-            if _starts_upper(t[start + mm.end():]):
+            if _starts_upper(t[start + mm.end() :]):
                 if mm.end() < end - start:
                     start += mm.end()
                 break
     if end < n:
-        tail = t[end:end + 400]
+        tail = t[end : end + 400]
         for mm in re.finditer(r"[.!?…]", tail):
-            rest = tail[mm.end():]
+            rest = tail[mm.end() :]
             if not rest.strip() or (rest[:1].isspace() and _starts_upper(rest.lstrip())):
                 end += mm.end()
                 break
     bounds = [max(0, min(o[f], end) - start) for f in range(lo, hi + 1)]
     bounds[-1] = end - start
     return {
-        "doc": p["c"], "section": p["s"], "url": p.get("u", ""), "meta": p.get("m", {}),
-        "text": t[start:end], "o": bounds,
+        "doc": p["c"],
+        "section": p["s"],
+        "url": p.get("u", ""),
+        "meta": p.get("m", {}),
+        "text": t[start:end],
+        "o": bounds,
         "cos": [note[f] if qv is not None else 0.0 for f in range(lo, hi + 1)],
-        "before": start > 0, "after": end < n,
+        "before": start > 0,
+        "after": end < n,
     }
 
 
@@ -245,14 +253,21 @@ def search(idx: Index, q: str, qv: np.ndarray | None = None, explain: bool = Fal
     sure = sure_enough(kw, sem, idx.meta["thresholds"])
     out: dict = {"sure": sure, "terms": kw["terms"]}
     if explain:
-        out["explain"] = {"best": kw["best"], "conj": kw["conj"], "df1": kw["df1"],
-                          "typed": kw["typed"],
-                          "top": sem["top"] if sem else None,
-                          "sectop": sem["sectop"] if sem else None}
+        out["explain"] = {
+            "best": kw["best"],
+            "conj": kw["conj"],
+            "df1": kw["df1"],
+            "typed": kw["typed"],
+            "top": sem["top"] if sem else None,
+            "sectop": sem["sectop"] if sem else None,
+        }
     if not sure:
         return out
     r = idx.meta["ranking"]
-    keep = (rrf(kw["ranked"], sem["ranked"], r["rrf_k"], r["answer_pool"]) if sem
-            else kw["ranked"][:r["display_k"]])
+    keep = (
+        rrf(kw["ranked"], sem["ranked"], r["rrf_k"], r["answer_pool"])
+        if sem
+        else kw["ranked"][: r["display_k"]]
+    )
     out["hits"] = [excerpt(i, qv, kw["terms"], idx) for i in keep]
     return out

@@ -1,12 +1,23 @@
 # web-search-helper
 
-[🇫🇷](LISEZMOI.md) · [🇬🇧](README.md)
+[🇫🇷](https://github.com/warith-harchaoui/web-search-helper/blob/main/LISEZMOI.md)&nbsp;&nbsp;|&nbsp;&nbsp;[🇬🇧](https://github.com/warith-harchaoui/web-search-helper/blob/main/README.md)
+
+![Licence](https://img.shields.io/badge/license-BSD--3--Clause-blue)
+![Python](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue)
+![PHP](https://img.shields.io/badge/server-PHP%20only-777BB4)
+[![tests](https://github.com/warith-harchaoui/web-search-helper/actions/workflows/tests.yml/badge.svg)](https://github.com/warith-harchaoui/web-search-helper/actions/workflows/tests.yml)
 
 **Interroger un corpus privé depuis un site web, avec PHP pour seul serveur.**
 Le corpus s'indexe sur votre machine ; un fichier PHP répond aux questions ; la
 page calcule le vecteur de chaque question dans le navigateur. Le corpus n'est
 jamais publié : le visiteur reçoit quelques phrases de ce qui répond, ou un
 « Je ne sais pas répondre » honnête, et rien d'autre.
+
+`web-search-helper` fait partie de la suite [**AI Helpers**](https://github.com/warith-harchaoui/ai-helpers).
+Il fonctionne d'emblée en français et en anglais (mots vides, composition de
+la réponse, interface), un index par langue, et dans toute autre langue avec
+un fichier de mots vides. Aucun LLM n'intervient : le seul modèle est un
+encodeur de phrases, et la réponse est faite des phrases du corpus lui-même.
 
 Licence BSD 3-Clause. Auteur : Warith Harchaoui.
 

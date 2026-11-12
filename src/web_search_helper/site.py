@@ -10,6 +10,7 @@ a visitor would and fails if any byte of the corpus comes back; it then asks
 the endpoint one question. An upload fails silently (a client that skips
 dotfiles, a file left halfway); the page still displays.
 """
+
 from __future__ import annotations
 
 import json
@@ -63,21 +64,28 @@ def install(site: str | Path, indexes: list[str | Path], data_dir: str = "search
         # search.php looks in ./search-data unless told otherwise.
         wrapper = site / "search.php"
         body = wrapper.read_text(encoding="utf-8")
-        body = body.replace("define('WSH_DATA_DIR', __DIR__ . '/search-data')",
-                            f"define('WSH_DATA_DIR', __DIR__ . '/{data_dir}')", 1)
+        body = body.replace(
+            "define('WSH_DATA_DIR', __DIR__ . '/search-data')",
+            f"define('WSH_DATA_DIR', __DIR__ . '/{data_dir}')",
+            1,
+        )
         wrapper.write_text(body, encoding="utf-8")
     return written
 
 
 def serve(site: str | Path, port: int = 8765, php: str = "php") -> subprocess.Popen:
     """``php -S`` on ``site``: the local twin of the hosting."""
-    return subprocess.Popen([php, "-S", f"127.0.0.1:{port}", "-t", str(site)],
-                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return subprocess.Popen(
+        [php, "-S", f"127.0.0.1:{port}", "-t", str(site)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def _get(url: str, data: bytes | None = None, timeout: float = 20):
-    req = urllib.request.Request(url, data=data, headers={
-        "Content-Type": "application/json", "User-Agent": "web-search-helper-check"})
+    req = urllib.request.Request(
+        url, data=data, headers={"Content-Type": "application/json", "User-Agent": "web-search-helper-check"}
+    )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, r.read()
@@ -85,8 +93,9 @@ def _get(url: str, data: bytes | None = None, timeout: float = 20):
         return e.code, e.read()
 
 
-def check_online(base_url: str, langs: list[str], question: str = "test",
-                 data_dir: str = "search-data") -> dict:
+def check_online(
+    base_url: str, langs: list[str], question: str = "test", data_dir: str = "search-data"
+) -> dict:
     """Is the corpus private, and does the endpoint answer?"""
     base = base_url.rstrip("/") + "/"
     report: dict = {"leaks": [], "endpoint": {}}
@@ -98,14 +107,19 @@ def check_online(base_url: str, langs: list[str], question: str = "test",
             if status == 200 and body.strip():
                 report["leaks"].append({"url": base + path, "bytes": len(body)})
         t0 = time.monotonic()
-        status, body = _get(base + "search.php",
-                            json.dumps({"lang": lang, "q": question}).encode("utf-8"))
-        report["endpoint"][lang] = {"status": status, "ms": round(1000 * (time.monotonic() - t0)),
-                                    "body": body[:200].decode("utf-8", "replace")}
+        status, body = _get(base + "search.php", json.dumps({"lang": lang, "q": question}).encode("utf-8"))
+        report["endpoint"][lang] = {
+            "status": status,
+            "ms": round(1000 * (time.monotonic() - t0)),
+            "body": body[:200].decode("utf-8", "replace"),
+        }
     status, _ = _get(base + "search.php")
     report["get_refused"] = status == 405
-    report["ok"] = (not report["leaks"] and report["get_refused"]
-                    and all(e["status"] == 200 for e in report["endpoint"].values()))
+    report["ok"] = (
+        not report["leaks"]
+        and report["get_refused"]
+        and all(e["status"] == 200 for e in report["endpoint"].values())
+    )
     return report
 
 
@@ -135,8 +149,7 @@ echo json_encode(['load_ms' => ($t1 - $t0) / 1e6, 'search_ms_median' => $times[i
 """
 
 
-def bench(index: str | Path, runs: int = 5, question: str = "test question",
-          php: str = "php") -> dict:
+def bench(index: str | Path, runs: int = 5, question: str = "test question", php: str = "php") -> dict:
     """Time the PHP engine on an index: load, then full searches (words + meaning).
 
     The search is exhaustive (every window is compared with the question).
@@ -151,9 +164,21 @@ def bench(index: str | Path, runs: int = 5, question: str = "test question",
         f.write(BENCH)
         script = f.name
     try:
-        out = subprocess.run([php, "-d", "memory_limit=512M", script, str(asset("search.php")),
-                              str(index), str(runs), question],
-                             capture_output=True, text=True, check=True)
+        out = subprocess.run(
+            [
+                php,
+                "-d",
+                "memory_limit=512M",
+                script,
+                str(asset("search.php")),
+                str(index),
+                str(runs),
+                question,
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
     finally:
         Path(script).unlink(missing_ok=True)
     return json.loads(out.stdout)

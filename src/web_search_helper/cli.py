@@ -1,4 +1,5 @@
 """``web-search-helper`` command line."""
+
 from __future__ import annotations
 
 import json
@@ -13,14 +14,19 @@ from . import __version__
 def _embedder(model: str, browser: str | None):
     if model == "hash":
         from .embed import HashEmbedder
+
         return HashEmbedder()
     from .embed import SentenceTransformerEmbedder
+
     return SentenceTransformerEmbedder(model, browser)
 
 
 def _lines(path: str) -> list[str]:
-    return [x.strip() for x in Path(path).read_text(encoding="utf-8").splitlines()
-            if x.strip() and not x.lstrip().startswith("#")]
+    return [
+        x.strip()
+        for x in Path(path).read_text(encoding="utf-8").splitlines()
+        if x.strip() and not x.lstrip().startswith("#")
+    ]
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -31,13 +37,26 @@ def main():
 
 @main.command()
 @click.argument("corpus", type=click.Path(exists=True))
-@click.option("-o", "--out", required=True, type=click.Path(), help="Index file to write, e.g. search-data/fr.php.")
+@click.option(
+    "-o", "--out", required=True, type=click.Path(), help="Index file to write, e.g. search-data/fr.php."
+)
 @click.option("--lang", required=True, help="Language code of the corpus (fr, en…).")
-@click.option("--model", default="paraphrase-multilingual-MiniLM-L12-v2", show_default=True,
-              help="sentence-transformers model; 'hash' for a dry run without weights.")
+@click.option(
+    "--model",
+    default="paraphrase-multilingual-MiniLM-L12-v2",
+    show_default=True,
+    help="sentence-transformers model; 'hash' for a dry run without weights.",
+)
 @click.option("--browser-model", default=None, help="transformers.js twin, if the model is not a known one.")
-@click.option("--stopwords", type=click.Path(exists=True), default=None, help="One stopword per line (replaces the default list).")
-@click.option("--target-words", default=220, show_default=True, help="Passage size when cutting Markdown/text.")
+@click.option(
+    "--stopwords",
+    type=click.Path(exists=True),
+    default=None,
+    help="One stopword per line (replaces the default list).",
+)
+@click.option(
+    "--target-words", default=220, show_default=True, help="Passage size when cutting Markdown/text."
+)
 @click.option("--per-hour", default=120, show_default=True, help="Requests per address per hour.")
 @click.option("--per-day", default=400, show_default=True, help="Requests per address per day.")
 def build(corpus, out, lang, model, browser_model, stopwords, target_words, per_hour, per_day):
@@ -49,25 +68,52 @@ def build(corpus, out, lang, model, browser_model, stopwords, target_words, per_
 
     passages = read_corpus(corpus, target_words)
     stop = frozenset(fold(w) for w in _lines(stopwords)) if stopwords else None
-    idx = build_index(passages, _embedder(model, browser_model), lang, stop,
-                      limits={"per_hour": per_hour, "per_day": per_day})
+    idx = build_index(
+        passages,
+        _embedder(model, browser_model),
+        lang,
+        stop,
+        limits={"per_hour": per_hour, "per_day": per_day},
+    )
     save(idx, out)
-    click.echo(f"{lang}: {len(idx.passages)} passages, {len(idx.vectors)} windows, "
-               f"{len(idx.centroids)} sections, {len(idx.words)} words -> {out}")
+    click.echo(
+        f"{lang}: {len(idx.passages)} passages, {len(idx.vectors)} windows, "
+        f"{len(idx.centroids)} sections, {len(idx.words)} words -> {out}"
+    )
     try:
         import ann_router as ar
-        c = ar.route(ar.Criteria(n_vectors=len(idx.vectors), dim=idx.meta["dim"], dynamic=False,
-                                 target_recall=0.95, latency_budget_ms=100))
-        click.echo(f"ann-router at a 100 ms budget: {c.backend}. The PHP engine scans exhaustively; "
-                   f"`web-search-helper bench {out}` measures whether that fits.")
+
+        c = ar.route(
+            ar.Criteria(
+                n_vectors=len(idx.vectors),
+                dim=idx.meta["dim"],
+                dynamic=False,
+                target_recall=0.95,
+                latency_budget_ms=100,
+            )
+        )
+        click.echo(
+            f"ann-router at a 100 ms budget: {c.backend}. The PHP engine scans exhaustively; "
+            f"`web-search-helper bench {out}` measures whether that fits."
+        )
     except ImportError:
         pass
 
 
 @main.command()
 @click.argument("index", type=click.Path(exists=True))
-@click.option("--inside", required=True, type=click.Path(exists=True), help="Questions the corpus answers, one per line.")
-@click.option("--outside", required=True, type=click.Path(exists=True), help="Questions it does not answer, one per line.")
+@click.option(
+    "--inside",
+    required=True,
+    type=click.Path(exists=True),
+    help="Questions the corpus answers, one per line.",
+)
+@click.option(
+    "--outside",
+    required=True,
+    type=click.Path(exists=True),
+    help="Questions it does not answer, one per line.",
+)
 @click.option("--write/--dry-run", default=False, help="Write the new thresholds into INDEX.")
 def calibrate(index, inside, outside, write):
     """Measure the thresholds of the "I cannot answer" rule."""
@@ -113,8 +159,10 @@ def install(site, indexes, data_dir):
 
     for p in run(site, list(indexes), data_dir):
         click.echo(p)
-    click.echo("Upload search.php, web-search.js and the whole data folder, .htaccess included; "
-               "then run `web-search-helper check-online <url> --lang …`.")
+    click.echo(
+        "Upload search.php, web-search.js and the whole data folder, .htaccess included; "
+        "then run `web-search-helper check-online <url> --lang …`."
+    )
 
 
 @main.command()
@@ -144,12 +192,18 @@ def bench(index, runs, question, budget_ms):
     r = run(index, runs, question)
     click.echo(json.dumps(r, indent=2))
     if r.get("slowing_extensions"):
-        click.echo(f"warning: {', '.join(r['slowing_extensions'])} loaded; it slows PHP loops several "
-                   "times over and is rarely on a production server. Measure there too "
-                   "(check-online reports the endpoint's time).", err=True)
+        click.echo(
+            f"warning: {', '.join(r['slowing_extensions'])} loaded; it slows PHP loops several "
+            "times over and is rarely on a production server. Measure there too "
+            "(check-online reports the endpoint's time).",
+            err=True,
+        )
     if r["search_ms_median"] > budget_ms:
-        click.echo(f"median {r['search_ms_median']:.0f} ms is over the {budget_ms:g} ms budget: "
-                   "time to consider an approximate index (see ann-router).", err=True)
+        click.echo(
+            f"median {r['search_ms_median']:.0f} ms is over the {budget_ms:g} ms budget: "
+            "time to consider an approximate index (see ann-router).",
+            err=True,
+        )
         sys.exit(1)
 
 

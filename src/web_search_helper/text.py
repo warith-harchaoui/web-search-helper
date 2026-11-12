@@ -11,6 +11,7 @@ strings.
 >>> tokenize("La parabole de l'éléphant", stopwords("fr"))
 ['parabole', 'elephant']
 """
+
 from __future__ import annotations
 
 import re
@@ -64,6 +65,7 @@ def strip_math(s: str) -> str:
     >>> strip_math(r"a \(\mathbf{x}_i\) b")
     'a x_i b'
     """
+
     def keep(m: re.Match) -> str:
         inner = m.group(1) or m.group(2) or ""
         return _BRACES.sub("", _MACRO.sub("", inner))

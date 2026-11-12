@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>web-search-helper — démo</title>
+  <title>web-search-helper demo</title>
   <style>
     body { font: 16px/1.5 system-ui, sans-serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; }
     input { width: 70%; padding: .4rem; } button { padding: .4rem .8rem; }
@@ -11,13 +11,25 @@
   </style>
 </head>
 <body>
-  <h1>Interroger le corpus</h1>
-  <form id="f"><input type="search" placeholder="Votre question" autocomplete="off"> <button>Chercher</button></form>
+  <!-- One page, two languages: ?lang=fr or ?lang=en picks the index and the
+       interface. search-data/ must hold an index for that language. -->
+  <p><a href="?lang=fr">Français</a> · <a href="?lang=en">English</a></p>
+  <h1 id="title"></h1>
+  <form id="f"><input type="search" autocomplete="off"> <button></button></form>
   <div id="out" aria-live="polite"></div>
   <script type="module">
     import { mount } from './web-search.js';
+    const lang = new URLSearchParams(location.search).get('lang') === 'fr' ? 'fr' : 'en';
+    const T = {
+      fr: { title: 'Interroger le corpus', ph: 'Votre question', btn: 'Chercher' },
+      en: { title: 'Ask the corpus', ph: 'Your question', btn: 'Search' },
+    }[lang];
+    document.documentElement.lang = lang;
+    document.getElementById('title').textContent = T.title;
+    document.querySelector('#f input').placeholder = T.ph;
+    document.querySelector('#f button').textContent = T.btn;
     mount(document.getElementById('f'), document.getElementById('out'),
-          { endpoint: 'search.php', lang: 'fr' });
+          { endpoint: 'search.php', lang });
   </script>
 </body>
 </html>
