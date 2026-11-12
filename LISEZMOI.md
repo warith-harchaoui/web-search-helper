@@ -78,12 +78,17 @@ pip install 'web-search-helper[embed]'
 web-search-helper build corpus/ -o build/fr.php --lang fr
 web-search-helper calibrate build/fr.php --inside dedans.txt --outside dehors.txt --write
 web-search-helper search build/fr.php "Quelle est la parabole de l'éléphant ?" --explain
-web-search-helper install site/ build/fr.php
-cp examples/demo.html site/index.html
-web-search-helper serve site/
+web-search-helper install site/ build/fr.php build/en.php --demo
+web-search-helper serve site/       # http://127.0.0.1:8765/demo.html?lang=fr
 web-search-helper bench build/fr.php
 web-search-helper check-online https://exemple.org/recherche/ --lang fr
 ```
+
+Comme tout AI Helper, le moteur répond aussi en HTTP (`web-search-helper-api`,
+avec une page `/gui`) et en MCP (`web-search-helper-mcp`, outils `indexes`,
+`search`, `calibrate`, `check_online`), pour les agents et les essais sans PHP ;
+`search.php` reste le serveur de production. La compétence pour agent est dans
+`skills/web-search-helper/`.
 
 Le reste (format JSONL, client JavaScript, API Python, limites) est décrit dans
 le [README anglais](README.md).

@@ -10,7 +10,13 @@
 - Bilingual demo page (`?lang=fr` / `?lang=en`).
 - Default `sec_min` 0.561, the value measured on that book.
 - `bench` warns when pcov or xdebug distorts the timing.
-- `install` accepts an index built straight into the site folder.
+- `install` accepts an index built straight into the site folder; `--demo`
+  copies the bilingual demo page, now a package asset.
+- HTTP API (`web-search-helper-api`, `[api]`) with a `/gui` page, and MCP
+  server (`web-search-helper-mcp`, `[mcp]`), as across the suite.
+- `TRIGGERS.md`, mirrored into the skill and checked by a test.
+- Fix: the hash test embedder records its parameters in the index, so an
+  index built at 32 dimensions is queried at 32.
 
 ## [0.1.0] — 2026-11-12
 

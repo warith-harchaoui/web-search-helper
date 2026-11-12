@@ -89,12 +89,17 @@ class HashEmbedder:
     the whole pipeline, PHP included, be tested without downloading weights.
     """
 
-    name = "hash"
     browser = "hash"
 
     def __init__(self, dim: int = 64, window_words: int = 40):
         self.dim = dim
         self.window_words = window_words
+
+    @property
+    def name(self) -> str:
+        # The parameters travel in the name, which the index records: an index
+        # built at 32 dimensions must be queried at 32, not at the default.
+        return f"hash:{self.dim}:{self.window_words}"
 
     def windows(self, text: str) -> list[int]:
         ends, count = [], 0
@@ -120,3 +125,15 @@ def window_texts(text: str, ends: list[int]) -> list[str]:
     """The text of each window, formulas reduced to their symbols."""
     starts = [0] + ends[:-1]
     return [strip_math(text[a:b]) for a, b in zip(starts, ends)]
+
+
+def make_embedder(name: str, browser: str | None = None):
+    """The embedder an index records as ``meta["model"]``, rebuilt.
+
+    >>> make_embedder("hash:32:12").dim
+    32
+    """
+    if name == "hash" or name.startswith("hash:"):
+        parts = name.split(":")
+        return HashEmbedder(*(int(x) for x in parts[1:3])) if len(parts) == 3 else HashEmbedder()
+    return SentenceTransformerEmbedder(name, browser)

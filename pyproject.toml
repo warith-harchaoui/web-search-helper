@@ -30,10 +30,16 @@ embed = ["sentence-transformers>=3"]
 # ann-router is only consulted, to print its advice next to the measured
 # PHP timing.
 route = ["ann-router>=0.3"]
-dev = ["pytest>=7", "ruff>=0.6"]
+api = ["fastapi>=0.111,<1", "uvicorn>=0.30,<1"]
+# fastapi-mcp 0.4.x breaks on mcp 2 (positional Server() signature), as
+# elsewhere in the suite.
+mcp = ["fastapi-mcp>=0.4,<1", "mcp<2,>=1.20", "fastapi>=0.111,<1", "uvicorn>=0.30,<1"]
+dev = ["pytest>=7", "ruff>=0.6", "httpx>=0.27"]
 
 [project.scripts]
 web-search-helper = "web_search_helper.cli:main"
+web-search-helper-api = "web_search_helper.api:main"
+web-search-helper-mcp = "web_search_helper.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/warith-harchaoui/web-search-helper"

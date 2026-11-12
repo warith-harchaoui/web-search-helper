@@ -39,13 +39,20 @@ def asset(name: str) -> Path:
     return Path(str(resources.files("web_search_helper") / "assets" / name))
 
 
-def install(site: str | Path, indexes: list[str | Path], data_dir: str = "search-data") -> list[Path]:
-    """Copy the endpoint, the client and the index files into ``site``."""
+def install(
+    site: str | Path, indexes: list[str | Path], data_dir: str = "search-data", demo: bool = False
+) -> list[Path]:
+    """Copy the endpoint, the client and the index files into ``site``.
+
+    ``demo`` also copies the bilingual demo page as ``demo.html``.
+    """
     site = Path(site)
     site.mkdir(parents=True, exist_ok=True)
     written = []
     for name in ASSETS:
         written.append(Path(shutil.copy2(asset(name), site / name)))
+    if demo:
+        written.append(Path(shutil.copy2(asset("demo.html"), site / "demo.html")))
     data = site / data_dir
     data.mkdir(exist_ok=True)
     (data / ".htaccess").write_text(DENY, encoding="utf-8")

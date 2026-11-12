@@ -12,13 +12,9 @@ from . import __version__
 
 
 def _embedder(model: str, browser: str | None):
-    if model == "hash":
-        from .embed import HashEmbedder
+    from .embed import make_embedder
 
-        return HashEmbedder()
-    from .embed import SentenceTransformerEmbedder
-
-    return SentenceTransformerEmbedder(model, browser)
+    return make_embedder(model, browser)
 
 
 def _lines(path: str) -> list[str]:
@@ -153,11 +149,12 @@ def search(index, question, words_only, explain):
 @click.argument("site", type=click.Path())
 @click.argument("indexes", nargs=-1, required=True, type=click.Path(exists=True))
 @click.option("--data-dir", default="search-data", show_default=True)
-def install(site, indexes, data_dir):
+@click.option("--demo", is_flag=True, help="Also copy the bilingual demo page (demo.html?lang=fr|en).")
+def install(site, indexes, data_dir, demo):
     """Copy search.php, web-search.js and INDEXES into the SITE folder."""
     from .site import install as run
 
-    for p in run(site, list(indexes), data_dir):
+    for p in run(site, list(indexes), data_dir, demo):
         click.echo(p)
     click.echo(
         "Upload search.php, web-search.js and the whole data folder, .htaccess included; "

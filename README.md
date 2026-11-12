@@ -86,9 +86,8 @@ web-search-helper calibrate build/fr.php --inside inside.txt --outside outside.t
 web-search-helper search build/fr.php "Quelle est la parabole de l'éléphant ?" --explain
 
 # 4. Copy the endpoint, the client and the index into the site; serve it locally.
-web-search-helper install site/ build/fr.php
-cp examples/demo.html site/index.html
-web-search-helper serve site/        # http://127.0.0.1:8765/?lang=fr (or ?lang=en)
+web-search-helper install site/ build/fr.php build/en.php --demo
+web-search-helper serve site/        # http://127.0.0.1:8765/demo.html?lang=fr (or ?lang=en)
 
 # 5. Time the PHP engine; after upload, check that nothing leaks.
 web-search-helper bench build/fr.php
@@ -115,6 +114,26 @@ loaded), then words and meaning. The answer composed by `composeAnswer` is made
 of corpus sentences, verbatim, chosen by maximal marginal relevance; nothing is
 generated. Types are in `web-search.d.ts`. `mount(form, output, options)` wires
 a minimal widget.
+
+## The suite's other doors
+
+Like every AI Helper, the engine is also reachable over HTTP and MCP, for
+agents, scripts and local testing without PHP (`search.php` stays the
+production server):
+
+```bash
+pip install 'web-search-helper[api,mcp,embed]'
+WSH_DATA_DIR=site/search-data web-search-helper-api    # http://127.0.0.1:8040/docs, /gui
+WSH_DATA_DIR=site/search-data web-search-helper-mcp    # MCP at http://127.0.0.1:8041/mcp
+```
+
+Routes: `POST /query` speaks `search.php`'s protocol, so `web-search.js` can
+point at it (that is what `/gui` does); `POST /search` takes a plain question
+and embeds it server-side; `GET /indexes`; `POST /calibrate` (writes
+nothing); `POST /check-online`. The MCP tools are `indexes`, `search`,
+`calibrate` and `check_online`. The agent skill lives in
+`skills/web-search-helper/`; `TRIGGERS.md` lists what should reach for this
+helper and what should not, and a test keeps it identical to the skill's copy.
 
 ## Python
 
