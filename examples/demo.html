@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>web-search-helper — démo</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; }
+    input { width: 70%; padding: .4rem; } button { padding: .4rem .8rem; }
+    li { margin: 1rem 0; } small { color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Interroger le corpus</h1>
+  <form id="f"><input type="search" placeholder="Votre question" autocomplete="off"> <button>Chercher</button></form>
+  <div id="out" aria-live="polite"></div>
+  <script type="module">
+    import { mount } from './web-search.js';
+    mount(document.getElementById('f'), document.getElementById('out'),
+          { endpoint: 'search.php', lang: 'fr' });
+  </script>
+</body>
+</html>

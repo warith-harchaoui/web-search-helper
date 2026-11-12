@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "web-search-helper"
+version = "0.1.0"
+description = "Search a private corpus from a website with PHP only: index it on your machine, serve it with one PHP file, embed the question in the browser. The corpus is never published; visitors get short excerpts, or an honest 'I cannot answer'."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "BSD-3-Clause" }
+authors = [{ name = "Warith Harchaoui", email = "warithmetics@deraison.ai" }]
+keywords = ["search", "rag", "semantic-search", "bm25", "php", "transformers.js", "static-site"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Intended Audience :: Developers",
+]
+# Core: building with the hash embedder (dry runs, tests) needs only numpy and
+# click. The real model is the [embed] extra, because sentence-transformers
+# pulls torch.
+dependencies = [
+    "click>=8.1,<9",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+embed = ["sentence-transformers>=3"]
+# ann-router is only consulted, to print its advice next to the measured
+# PHP timing.
+route = ["ann-router>=0.3"]
+dev = ["pytest>=7", "ruff>=0.6"]
+
+[project.scripts]
+web-search-helper = "web_search_helper.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/warith-harchaoui/web-search-helper"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+web_search_helper = ["assets/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "src"]
+addopts = "-q --doctest-modules"
+
+[tool.ruff]
+line-length = 110
