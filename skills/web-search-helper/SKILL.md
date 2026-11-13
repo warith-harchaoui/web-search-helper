@@ -5,7 +5,7 @@ description: >-
   manuscript, a course, an internal knowledge base), when the host offers PHP
   and nothing else. Indexes locally, serves from one PHP file, embeds the
   question in the browser, returns short excerpts or an honest "I cannot
-  answer", and composes an extractive answer (no LLM).
+  answer", and composes an answer from the corpus's own sentences.
   Fires on "search my book / course / docs from my website", "RAG without a
   backend", "semantic search in PHP", "client-side search without publishing
   the corpus", "the search JSON exposes my whole text", "calibrate the 'I
@@ -66,9 +66,11 @@ One index per language; the page says which language it asks. In the page:
 - **Exhaustive search is deliberate.** Do not swap in HNSW to save time unless
   `bench` exceeds the budget on the real host: the refusal rule judges the
   absolute best cosine, which an approximate index can miss.
-- **The answer is extractive.** `composeAnswer` picks corpus sentences
-  verbatim; no LLM writes. If the user wants generated prose, that is a
-  separate design decision (an in-browser LLM, Chrome's Prompt API, or PHP
-  calling a hosted API), not a flag.
+- **Extractive by default, written on request.** `composeAnswer` picks
+  corpus sentences verbatim. `mount(..., { writer: true })` adds an in-browser
+  LLM answer whose model comes from `writer-plan.json`, written by
+  `best-engine-ai-helper browser plan --usage rag-answer`; regenerate it there,
+  never pick a model by hand. A written answer that fails `checkGrounding` is
+  set aside.
 
 For every flag, read `references/cli-reference.md`.

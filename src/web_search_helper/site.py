@@ -24,7 +24,7 @@ from pathlib import Path
 
 from .index import HEADER
 
-ASSETS = ("search.php", "web-search.js", "web-search.d.ts")
+ASSETS = ("search.php", "web-search.js", "web-search.d.ts", "writer-plan.json")
 DENY = """# web-search-helper: nothing in this folder is served.
 # <FilesMatch> rather than a bare Require: a <FilesMatch> of a parent
 # .htaccess (one that re-allows *.json, say) is merged AFTER directory

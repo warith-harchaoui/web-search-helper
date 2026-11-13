@@ -16,8 +16,11 @@ answer" and nothing else.
 `web-search-helper` belongs to the [**AI Helpers**](https://github.com/warith-harchaoui/ai-helpers)
 suite. It works in French and in English out of the box (stopwords, answer
 composition, interface), one index per language, and in any other language
-with a stopword file. No LLM is involved: the only model is a sentence encoder,
-and the answer is made of the corpus's own sentences.
+with a stopword file. By default no LLM is involved: the answer is made of the
+corpus's own sentences. Optionally, a small language model runs in the
+visitor's browser and writes the answer from the excerpts, citing them; which
+model depends on the visitor's machine and line, as planned by
+[`best-engine-ai-helper`](https://github.com/warith-harchaoui/best-engine-ai-helper).
 
 BSD 3-Clause licence. Author: Warith Harchaoui.
 
@@ -35,7 +38,7 @@ database. web-search-helper fits there.
 |---|---|---|
 | your machine | cut, embed and index the corpus; measure the thresholds | Python ≥ 3.10, `sentence-transformers` |
 | the server | `search.php`: BM25 + cosines + fusion + verdict, returns excerpts | PHP ≥ 7.4 with mbstring |
-| the browser | `web-search.js`: embeds the question (transformers.js), composes an extractive answer | an ES-module browser |
+| the browser | `web-search.js`: embeds the question (transformers.js), composes an extractive answer, optionally writes one with an in-browser LLM | an ES-module browser; WebGPU for the written answer |
 
 ## How it searches
 
@@ -114,6 +117,42 @@ loaded), then words and meaning. The answer composed by `composeAnswer` is made
 of corpus sentences, verbatim, chosen by maximal marginal relevance; nothing is
 generated. Types are in `web-search.d.ts`. `mount(form, output, options)` wires
 a minimal widget.
+
+## A written answer, in the visitor's browser
+
+`mount(form, output, { …, writer: true })` adds a button under a `sure`
+result: a small language model, run by transformers.js on WebGPU in the
+visitor's browser, rewrites the excerpts into an answer that cites them as
+[1], [2]… Nothing leaves the browser and the server does not change.
+
+Which model is not decided in this package. `writer-plan.json`, written by
+`best-engine-ai-helper browser plan --usage rag-answer`, is an ordered ladder
+ranked by scores measured on this very task: Gemma 4 E4B (0.722) then Gemma 4
+E2B (0.667), each in q4f16 and q4, with exact files and sizes (3.1 to 5.6 GB).
+LFM2 1.2B was measured too (0.167: most of its answers cite nothing) and left
+out, so a machine that cannot fetch a Gemma keeps the extractive answer rather
+than one it would set aside. `scripts/eval_writer.py` reruns the measurement on
+your own corpus; `scripts/make_writer_plan.py` rewrites the plan from
+best-engine. The page probes the machine (WebGPU,
+shader-f16, device memory, storage, mobile, data saver), checks the browser
+cache, measures the bandwidth on a Range request to the model's own files, and
+takes the first rung it can fetch within `max_download_s` (180 s). Nothing fits:
+no button, and the extractive answer stands. `chooseRung` is tested against
+best-engine's Python `browser.choose` on 2 251 simulated devices.
+
+The written answer is checked before it is shown: the model only sees a `sure`
+result, it is told to use the excerpts only and to say when they fall short,
+and every sentence it writes must find most of its content words in the
+excerpts it cites (`checkGrounding`). Otherwise the page sets the written
+answer aside and keeps the extractive one. The excerpts stay listed below it,
+verbatim.
+
+```js
+import { Writer } from './web-search.js';
+const { writer, reason } = await Writer.create('writer-plan.json');  // null when nothing fits
+const answer = writer && await writer.write(result, { question, lang: 'fr', onText: show });
+if (answer && answer.grounded) show(answer.text);
+```
 
 ## The suite's other doors
 

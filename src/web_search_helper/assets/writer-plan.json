@@ -1,0 +1,118 @@
+{
+  "usage": "rag-answer",
+  "summary": "Sourced RAG answer with page-precise citations, FR/EN, low hallucination.",
+  "runtime": "transformers.js",
+  "transformers": "@huggingface/transformers@4.3.2",
+  "languages": [
+    "fr",
+    "en"
+  ],
+  "generated_at": "2026-11-13",
+  "policy": {
+    "max_download_s": 180,
+    "unknown_bandwidth_Bps": 2500000,
+    "probe_bytes": 4000000,
+    "storage_margin": 1.1,
+    "slow_networks": [
+      "slow-2g",
+      "2g",
+      "3g"
+    ]
+  },
+  "min_score": 0.5,
+  "candidates": [
+    {
+      "model": "onnx-community/gemma-4-E4B-it-ONNX",
+      "family": "gemma4",
+      "dtype": "q4f16",
+      "bytes": 4905482405,
+      "needs_f16": true,
+      "min_device_memory_gb": 8,
+      "files": [
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4f16.onnx",
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4f16.onnx_data",
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4f16.onnx_data_1",
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/embed_tokens_q4f16.onnx",
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/embed_tokens_q4f16.onnx_data"
+      ],
+      "loader": "processor",
+      "chat_kwargs": {
+        "enable_thinking": false
+      },
+      "params_b": 4,
+      "license": "apache-2.0",
+      "measured": 0.722
+    },
+    {
+      "model": "onnx-community/gemma-4-E4B-it-ONNX",
+      "family": "gemma4",
+      "dtype": "q4",
+      "bytes": 5616292603,
+      "needs_f16": false,
+      "min_device_memory_gb": 8,
+      "files": [
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4.onnx",
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4.onnx_data",
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4.onnx_data_1",
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/embed_tokens_q4.onnx",
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/embed_tokens_q4.onnx_data",
+        "https://huggingface.co/onnx-community/gemma-4-E4B-it-ONNX/resolve/main/onnx/embed_tokens_q4.onnx_data_1"
+      ],
+      "loader": "processor",
+      "chat_kwargs": {
+        "enable_thinking": false
+      },
+      "params_b": 4,
+      "license": "apache-2.0",
+      "measured": 0.722
+    },
+    {
+      "model": "onnx-community/gemma-4-E2B-it-ONNX",
+      "family": "gemma4",
+      "dtype": "q4f16",
+      "bytes": 3111069636,
+      "needs_f16": true,
+      "min_device_memory_gb": 8,
+      "files": [
+        "https://huggingface.co/onnx-community/gemma-4-E2B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4f16.onnx",
+        "https://huggingface.co/onnx-community/gemma-4-E2B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4f16.onnx_data",
+        "https://huggingface.co/onnx-community/gemma-4-E2B-it-ONNX/resolve/main/onnx/embed_tokens_q4f16.onnx",
+        "https://huggingface.co/onnx-community/gemma-4-E2B-it-ONNX/resolve/main/onnx/embed_tokens_q4f16.onnx_data"
+      ],
+      "loader": "processor",
+      "chat_kwargs": {
+        "enable_thinking": false
+      },
+      "params_b": 2,
+      "license": "apache-2.0",
+      "measured": 0.667
+    },
+    {
+      "model": "onnx-community/gemma-4-E2B-it-ONNX",
+      "family": "gemma4",
+      "dtype": "q4",
+      "bytes": 3627411909,
+      "needs_f16": false,
+      "min_device_memory_gb": 8,
+      "files": [
+        "https://huggingface.co/onnx-community/gemma-4-E2B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4.onnx",
+        "https://huggingface.co/onnx-community/gemma-4-E2B-it-ONNX/resolve/main/onnx/decoder_model_merged_q4.onnx_data",
+        "https://huggingface.co/onnx-community/gemma-4-E2B-it-ONNX/resolve/main/onnx/embed_tokens_q4.onnx",
+        "https://huggingface.co/onnx-community/gemma-4-E2B-it-ONNX/resolve/main/onnx/embed_tokens_q4.onnx_data"
+      ],
+      "loader": "processor",
+      "chat_kwargs": {
+        "enable_thinking": false
+      },
+      "params_b": 2,
+      "license": "apache-2.0",
+      "measured": 0.667
+    }
+  ],
+  "excluded": [
+    {
+      "model": "onnx-community/LFM2-1.2B-ONNX",
+      "reason": "measured 0.167 < 0.5"
+    }
+  ]
+}

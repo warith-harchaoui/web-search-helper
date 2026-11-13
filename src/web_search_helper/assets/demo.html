@@ -29,7 +29,7 @@
     document.querySelector('#f input').placeholder = T.ph;
     document.querySelector('#f button').textContent = T.btn;
     mount(document.getElementById('f'), document.getElementById('out'),
-          { endpoint: 'search.php', lang });
+          { endpoint: 'search.php', lang, writer: true });
   </script>
 </body>
 </html>

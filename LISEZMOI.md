@@ -16,8 +16,15 @@ jamais publié : le visiteur reçoit quelques phrases de ce qui répond, ou un
 `web-search-helper` fait partie de la suite [**AI Helpers**](https://github.com/warith-harchaoui/ai-helpers).
 Il fonctionne d'emblée en français et en anglais (mots vides, composition de
 la réponse, interface), un index par langue, et dans toute autre langue avec
-un fichier de mots vides. Aucun LLM n'intervient : le seul modèle est un
-encodeur de phrases, et la réponse est faite des phrases du corpus lui-même.
+un fichier de mots vides. Par défaut, aucun LLM n'intervient : la réponse est
+faite des phrases du corpus lui-même. En option, un petit modèle de langue
+tourne dans le navigateur du visiteur et rédige la réponse à partir des
+extraits, en les citant ; le modèle dépend de la machine et de la ligne du
+visiteur, selon le plan préparé par
+[`best-engine-ai-helper`](https://github.com/warith-harchaoui/best-engine-ai-helper)
+(Gemma 4 E4B puis E2B, de 3,1 à 5,6 Go, classés par leur score mesuré sur cette tâche ;
+LFM2 1.2B, mesuré à 0,167, en est écarté). Une réponse
+rédigée dont une phrase ne s'appuie pas sur les extraits est écartée.
 
 Licence BSD 3-Clause. Auteur : Warith Harchaoui.
 

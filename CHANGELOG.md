@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+- Optional written answer in the visitor's browser: `Writer`, `chooseRung`,
+  `probeDevice`, `measureBandwidth`, `checkGrounding`, and a button in
+  `mount(..., { writer: true })`. The model comes from `writer-plan.json`,
+  best-engine-ai-helper's ladder for the `rag-answer` usage (Gemma 4 E4B
+  then E2B, q4f16 or q4, ranked by scores measured on the task; LFM2 1.2B
+  measured and left out), chosen at run time from WebGPU,
+  shader-f16, device memory, storage, mobile, data saver, the cache and the
+  bandwidth measured on the model's own files. `chooseRung` is checked
+  against best-engine's `browser.choose` on 2 251 simulated devices. A
+  written answer whose sentences the cited excerpts do not support is set
+  aside. `install` copies the plan.
+- `scripts/eval_writer.py` measures each rung on a corpus's own questions in
+  Chrome on WebGPU (an answer counts when grounded and in the question's
+  language); `scripts/make_writer_plan.py` regenerates the plan and the
+  parity fixture from best-engine-ai-helper.
 - Joins the AI Helpers suite: agent skill (`skills/web-search-helper/`),
   `CITATION.cff`, CI running the PHP parity test on every push.
 - English tested like French: parity test over both languages; on the
