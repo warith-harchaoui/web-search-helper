@@ -314,6 +314,28 @@ function wsh_rrf($a, $b, $k, $top) {
 
 function wsh_starts_upper($s) { return preg_match('/^[«"“(]*[\p{Lu}\p{Lt}0-9]/u', $s) === 1; }
 
+// TeX formulas an excerpt must never cut: display $$…$$ and \[…\], inline \(…\).
+// Spans in characters, like the window offsets.
+function wsh_math_spans($t) {
+    $spans = [];
+    if (preg_match_all('/\$\$.*?\$\$|\\\\\[.*?\\\\\]|\\\\\(.*?\\\\\)/su', $t, $mm, PREG_OFFSET_CAPTURE)) {
+        foreach ($mm[0] as $hit) {
+            $a = mb_strlen(substr($t, 0, $hit[1]), 'UTF-8');
+            $spans[] = [$a, $a + mb_strlen($hit[0], 'UTF-8')];
+        }
+    }
+    return $spans;
+}
+
+// A bound inside a formula moves out of it, the start back to its opening, the
+// end on past its closing, so the page never receives half a formula.
+function wsh_outside_math($spans, &$start, &$end) {
+    foreach ($spans as $s) {
+        if ($s[0] < $start && $start < $s[1]) $start = $s[0];
+        if ($s[0] < $end && $end < $s[1]) $end = $s[1];
+    }
+}
+
 function wsh_excerpt($i, $qv, $terms, &$I) {
     $p = $I['meta']['passages'][$i];
     $t = $p['t'];
@@ -346,6 +368,8 @@ function wsh_excerpt($i, $qv, $terms, &$I) {
     }
     $start = $lo ? $o[$lo - 1] : 0;
     $end = $o[$hi];
+    $spans = wsh_math_spans($t);
+    wsh_outside_math($spans, $start, $end);
     if ($start > 0) {
         $chunk = mb_substr($t, $start, $end - $start, 'UTF-8');
         if (preg_match_all('/[.!?…]\s+/u', $chunk, $mm, PREG_OFFSET_CAPTURE)) {
@@ -372,6 +396,7 @@ function wsh_excerpt($i, $qv, $terms, &$I) {
             }
         }
     }
+    wsh_outside_math($spans, $start, $end);
     $bounds = [];
     $cos = [];
     for ($f = $lo; $f <= $hi; $f++) {

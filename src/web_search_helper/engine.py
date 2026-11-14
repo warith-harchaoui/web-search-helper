@@ -185,6 +185,22 @@ def _starts_upper(s: str) -> bool:
     return bool(s) and (unicodedata.category(s[0]) in ("Lu", "Lt") or s[0] in "0123456789")
 
 
+#: TeX formulas an excerpt must never cut: display $$…$$ and \[…\], inline \(…\).
+MATH = re.compile(r"\$\$.*?\$\$|\\\[.*?\\\]|\\\(.*?\\\)", re.DOTALL)
+
+
+def _outside_math(spans: list[tuple[int, int]], start: int, end: int) -> tuple[int, int]:
+    # Twin of PHP's wsh_outside_math: a bound inside a formula moves out of it,
+    # the start back to its opening, the end on past its closing, so the page
+    # never receives half a formula it cannot typeset.
+    for a, b in spans:
+        if a < start < b:
+            start = a
+        if a < end < b:
+            end = b
+    return start, end
+
+
 def excerpt(i: int, qv: np.ndarray | None, terms: list[str], idx: Index) -> dict:
     """Two windows of passage ``i``, snapped to sentence boundaries.
 
@@ -215,8 +231,8 @@ def excerpt(i: int, qv: np.ndarray | None, terms: list[str], idx: Index) -> dict
             lo = m - 1
         else:
             hi = m + 1
-    start = o[lo - 1] if lo else 0
-    end = o[hi]
+    spans = [m.span() for m in MATH.finditer(t)]
+    start, end = _outside_math(spans, o[lo - 1] if lo else 0, o[hi])
     if start > 0:
         for mm in re.finditer(r"[.!?…]\s+", t[start:end]):
             if _starts_upper(t[start + mm.end() :]):
@@ -230,6 +246,7 @@ def excerpt(i: int, qv: np.ndarray | None, terms: list[str], idx: Index) -> dict
             if not rest.strip() or (rest[:1].isspace() and _starts_upper(rest.lstrip())):
                 end += mm.end()
                 break
+    start, end = _outside_math(spans, start, end)
     bounds = [max(0, min(o[f], end) - start) for f in range(lo, hi + 1)]
     bounds[-1] = end - start
     return {

@@ -115,3 +115,41 @@ def test_some_questions_are_refused_and_some_answered(php_results):
 
 def test_stopwords_are_folded():
     assert "etre" in stopwords("fr") and "être" not in stopwords("fr")
+
+
+MATH_TEXT = (
+    "Le modèle se note ainsi. Une politique associe une action à chaque situation : "
+    # Longer than the 400 characters sentence snapping looks ahead: without
+    # the guard, the excerpt stopped inside it.
+    "$$\\mathbf{J}(\\pi) = "
+    + " + ".join(f"\\gamma^{{{k}}} r_{{{k}}}" for k in range(40))
+    + "$$ et on la maximise. "
+    "On retire le plus petit morceau, noté \\(f_{\\theta}\\), sans perte notable. Fin du passage."
+)
+
+
+def test_excerpts_never_cut_a_formula(php, tmp_path):
+    """A window bound inside $$…$$ or \\(…\\) moves out of it, in both twins."""
+    from web_search_helper.engine import excerpt
+    from web_search_helper.index import from_vectors
+
+    t = MATH_TEXT
+    cuts = [t.index("Une politique"), t.index("\\mathbf") + 3, len(t)]
+    m = {"python": "m", "browser": "b"}
+    idx = from_vectors([{"t": t, "c": "d", "s": "s", "o": cuts}], np.eye(3, 8, dtype=np.float32), "fr", m)
+    runner = tmp_path / "x.php"
+    runner.write_text(
+        "<?php define('WSH_NO_MAIN', true); require $argv[1]; $I = wsh_load($argv[2]);"
+        "$out = []; foreach ([0, 1, 2] as $k) { $qv = array_fill(0, 8, 0.0); $qv[$k] = 1.0;"
+        " $out[] = wsh_excerpt(0, $qv, [], $I)['text']; } echo json_encode($out, JSON_UNESCAPED_UNICODE);",
+        encoding="utf-8",
+    )
+    path = save(idx, tmp_path / "fr.php")
+    out = subprocess.run(
+        [php, str(runner), str(asset("search.php")), str(path)], capture_output=True, text=True, check=True
+    )
+    php_texts = json.loads(out.stdout)
+    for k in range(3):
+        text = excerpt(0, np.eye(3, 8, dtype=np.float32)[k], [], idx)["text"]
+        assert text == php_texts[k]
+        assert text.count("$$") % 2 == 0 and text.count("\\(") == text.count("\\)"), text

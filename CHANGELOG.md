@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- Excerpts never cut a TeX formula. A window bound inside `$$…$$`, `\[…\]`
+  or `\(…\)` moves out of it, in search.php and engine.py alike. Found on a
+  book whose display formulas run past the 400 characters that sentence
+  snapping looks ahead: 8 excerpts out of 486 ended half way through one,
+  which KaTeX then printed raw.
 - `from_vectors` and `vectors_from_int8`: build an index from embeddings a
   site already computes, without re-embedding (and with the same vectors, to
   compare engines). Window ends may repeat: an empty window left by another
