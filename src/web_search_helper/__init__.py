@@ -18,7 +18,7 @@ from .calibrate import calibrate
 from .corpus import Passage, read_corpus, read_jsonl
 from .embed import DEFAULT_MODEL, MODELS, HashEmbedder, SentenceTransformerEmbedder
 from .engine import search
-from .index import Index, build, load, save
+from .index import Index, build, from_vectors, load, save, vectors_from_int8
 from .site import bench, check_online, install, serve
 
 __all__ = [
@@ -32,6 +32,7 @@ __all__ = [
     "build",
     "calibrate",
     "check_online",
+    "from_vectors",
     "install",
     "load",
     "read_corpus",
@@ -39,4 +40,5 @@ __all__ = [
     "save",
     "search",
     "serve",
+    "vectors_from_int8",
 ]

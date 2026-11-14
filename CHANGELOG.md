@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- `from_vectors` and `vectors_from_int8`: build an index from embeddings a
+  site already computes, without re-embedding (and with the same vectors, to
+  compare engines). Window ends may repeat: an empty window left by another
+  pipeline keeps its vector aligned.
 - Optional written answer in the visitor's browser: `Writer`, `chooseRung`,
   `probeDevice`, `measureBandwidth`, `checkGrounding`, and a button in
   `mount(..., { writer: true })`. The model comes from `writer-plan.json`,

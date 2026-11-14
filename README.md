@@ -174,6 +174,16 @@ nothing); `POST /check-online`. The MCP tools are `indexes`, `search`,
 `skills/web-search-helper/`; `TRIGGERS.md` lists what should reach for this
 helper and what should not, and a test keeps it identical to the skill's copy.
 
+## Bring your own embeddings
+
+A site that already embeds its corpus can keep its vectors and only hand the
+engine over: `from_vectors(rows, vectors, lang, model)` builds the index from
+passages (`t`, `c`, `s`, the window ends `o`, optional `u` and `m`) and one
+normalised vector per window; `vectors_from_int8` reads int8 vectors back the
+way a browser would. That is how "Interroger le livre" moved from an
+all-in-the-browser search to `search.php` with the SAME vectors, stopwords and
+thresholds, so that only the place of the computation changed.
+
 ## Python
 
 ```python

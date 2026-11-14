@@ -36,6 +36,7 @@ from __future__ import annotations
 import json
 import struct
 from dataclasses import dataclass, field
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -117,6 +118,60 @@ def build(
     vecs = np.concatenate(
         [embedder.encode(texts[k : k + batch]) for k in range(0, len(texts), batch)]
     ).astype(np.float32)
+    return from_vectors(
+        rows,
+        vecs,
+        lang,
+        model={"python": embedder.name, "browser": embedder.browser},
+        stop=stop,
+        thresholds=thresholds,
+        limits=limits,
+        ranking=ranking,
+    )
+
+
+def from_vectors(
+    rows: list[dict],
+    vectors: np.ndarray,
+    lang: str,
+    model: dict,
+    stop: frozenset[str] | None = None,
+    thresholds: dict | None = None,
+    limits: dict | None = None,
+    ranking: dict | None = None,
+) -> Index:
+    """Index passages whose windows are already embedded, by another pipeline.
+
+    For a site that computes its own embeddings and wants the engine without
+    re-embedding (or wants the SAME vectors, to compare engines). ``rows`` are
+    dicts with ``t`` (text), ``c`` (document), ``s`` (section), ``o`` (end
+    offset of each window in ``t``) and optionally ``u`` (url) and ``m`` (meta
+    passed to the browser); ``vectors`` holds one L2-normalised row per window,
+    passages in order. ``model`` names the Python model and its transformers.js
+    twin, which the page must use for the question.
+
+    >>> rows = [{"t": "Un éléphant.", "c": "D", "s": "S", "o": [12]}]
+    >>> idx = from_vectors(rows, np.eye(1, 4, dtype=np.float32), "fr",
+    ...                    {"python": "m", "browser": "Xenova/m"})
+    >>> idx.meta["dim"], idx.words
+    (4, ['elephant'])
+    """
+    if not rows:
+        raise ValueError("empty corpus")
+    vecs = np.asarray(vectors, dtype=np.float32)
+    announced = 0
+    for k, r in enumerate(rows):
+        o = r.get("o")
+        # Non-decreasing, not strictly increasing: a pipeline may leave an empty
+        # window (a trailing " ." cut on its own, seen in the wild), whose
+        # vector exists and must stay aligned with the rest.
+        if not o or o[-1] != len(r["t"]) or any(a > b for a, b in pairwise(o)):
+            raise ValueError(f"passage {k}: 'o' must be non-decreasing window ends, the last at len(t)")
+        announced += len(o)
+    if announced != len(vecs):
+        raise ValueError(f"{announced} windows announced, {len(vecs)} vectors")
+    stop = default_stopwords(lang) if stop is None else stop
+    rows = [dict(r) for r in rows]
 
     # Sections in order of first appearance; a centroid is the normalised sum
     # of the section's windows. It judges whether a whole SECTION is about the
@@ -151,7 +206,7 @@ def build(
         "format": FORMAT,
         "lang": lang,
         "dim": int(vecs.shape[1]),
-        "model": {"python": embedder.name, "browser": embedder.browser},
+        "model": dict(model),
         "stopwords": sorted(stop),
         "thresholds": {**DEFAULT_THRESHOLDS, **(thresholds or {})},
         "limits": {**DEFAULT_LIMITS, **(limits or {})},
@@ -159,6 +214,19 @@ def build(
         "avg_len": sum(lengths) / len(lengths),
     }
     return Index(meta, rows, section_of, vecs, cents, words, postings, lengths)
+
+
+def vectors_from_int8(data: bytes, dim: int) -> np.ndarray:
+    """int8 vectors (component × 127), read back as a browser would: each row
+    divided by its own norm, in float32.
+
+    >>> vectors_from_int8(bytes([127, 0, 0, 0]), 4).tolist()
+    [[1.0, 0.0, 0.0, 0.0]]
+    """
+    b = np.frombuffer(data, dtype=np.int8).astype(np.float64).reshape(-1, dim)
+    n = np.sqrt((b * b).sum(axis=1))
+    inv = np.divide(1.0, n, out=np.zeros_like(n), where=n > 0)
+    return (b * inv[:, None]).astype(np.float32)
 
 
 def to_bytes(idx: Index) -> bytes:

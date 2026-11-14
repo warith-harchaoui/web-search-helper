@@ -62,3 +62,30 @@ def test_english(index_en, embedder):
     q = "audit of permissions"
     for h in search(index_en, q, embedder.encode([q])[0])["hits"]:
         assert h["text"] in "".join(p["t"] for p in index_en.passages)
+
+
+def test_from_vectors_keeps_the_given_vectors(index):
+    from web_search_helper.index import from_vectors, vectors_from_int8
+
+    rows = [{k: p[k] for k in ("t", "c", "s", "o")} for p in index.passages]
+    again = from_vectors(rows, index.vectors, "fr", index.meta["model"], stop=index.stop)
+    assert np.array_equal(again.vectors, index.vectors)
+    assert again.words == index.words and np.allclose(again.centroids, index.centroids)
+
+    q8 = np.clip(np.rint(index.vectors * 127), -127, 127).astype(np.int8).tobytes()
+    back = vectors_from_int8(q8, index.meta["dim"])
+    assert np.allclose(np.linalg.norm(back, axis=1), 1.0, atol=1e-5)
+
+
+def test_from_vectors_checks_alignment():
+    import pytest
+
+    from web_search_helper.index import from_vectors
+
+    m = {"python": "m", "browser": "b"}
+    with pytest.raises(ValueError, match="windows announced"):
+        from_vectors([{"t": "abc", "c": "d", "s": "s", "o": [3]}], np.zeros((2, 4), np.float32), "fr", m)
+    with pytest.raises(ValueError, match="non-decreasing"):
+        from_vectors([{"t": "abc", "c": "d", "s": "s", "o": [2, 1]}], np.zeros((2, 4), np.float32), "fr", m)
+    # An empty window (a trailing " ." cut on its own) is accepted.
+    from_vectors([{"t": "ab .", "c": "d", "s": "s", "o": [4, 4]}], np.eye(2, 4, dtype=np.float32), "fr", m)
