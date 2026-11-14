@@ -44,8 +44,8 @@ test('probeDevice finds a cached rung and measures the line', async () => {
   const d = await probeDevice(plan, env);
   assert.deepEqual(d.cached, [`${last.model}|${last.dtype}`]);
   assert.equal(d.storage_free_bytes, 4.9e10);
-  assert.equal(d.bandwidth_Bps, 8_000_000);              // 4 MB in 0.5 s
-  // 64 Mbit/s: no Gemma downloads within 180 s, so the cached rung wins.
+  assert.equal(d.bandwidth_Bps, 16_000_000);             // two shards of 4 MB, together, in 0.5 s
+  // 128 Mbit/s: no Gemma downloads within 180 s, so the cached rung wins.
   const r = chooseRung(plan, d);
   assert.equal(r.reason, 'cached');
   assert.equal(`${r.candidate.model}|${r.candidate.dtype}`, `${last.model}|${last.dtype}`);
@@ -56,6 +56,22 @@ test('a bandwidth probe too small or failed says nothing', async () => {
                  fetch: async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(1000) }) };
   assert.equal(await measureBandwidth('u', 4e6, tiny), undefined);
   assert.equal(await measureBandwidth('u', 4e6, { fetch: async () => { throw new Error('x'); } }), undefined);
+});
+
+test('the probe times from the first byte', async () => {
+  // Each request: 1 s before its first byte (redirect, latency), then four
+  // chunks of 1 MB, 0.25 s apart.
+  let t = 0;
+  const chunks = () => { let k = 0; return { read: async () => {
+    if (k === 4) return { done: true };
+    t += k++ === 0 ? 1000 : 250;
+    return { done: false, value: new Uint8Array(1_000_000) }; } }; };
+  const env = { performance: { now: () => t },
+                fetch: async () => ({ ok: true, body: { getReader: chunks } }) };
+  // First byte at 1 s, last at 1.75 s: 3 MB in 0.75 s, the 1 s before it
+  // left out. Timed over the whole request, it would say 4 MB / 1.75 s.
+  assert.equal(await measureBandwidth('a', 4e6, env), 4e6);
+  assert.equal(await measureBandwidth([], 4e6, env), undefined);
 });
 
 const ex = [

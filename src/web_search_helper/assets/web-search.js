@@ -361,28 +361,55 @@ export async function probeDevice(plan, env = globalThis) {
     } catch (e) { /* no cache access */ }
   }
   if (device.webgpu && !device.mobile && !device.save_data && plan.candidates.length) {
-    device.bandwidth_Bps = await measureBandwidth(
-      // A weight shard, not the small graph file: under a megabyte, latency
-      // would dominate the measure.
-      plan.candidates[plan.candidates.length - 1].files.find((u) => u.includes('.onnx_data'))
-        || plan.candidates[plan.candidates.length - 1].files[0],
+    // The weight shards, not the small graph files: under a megabyte, latency
+    // would dominate the measure. All of them at once, as they will load.
+    const files = plan.candidates[plan.candidates.length - 1].files;
+    const shards = files.filter((u) => u.includes('.onnx_data'));
+    device.bandwidth_Bps = await measureBandwidth(shards.length ? shards : files[0],
       plan.policy.probe_bytes, env);
   }
   return device;
 }
 
-/** Bytes per second over a Range request of `bytes` on `url`; undefined on failure. */
-export async function measureBandwidth(url, bytes, env = globalThis) {
-  if (!url || !env.fetch) return undefined;
+/**
+ * Bytes per second the line delivers, measured like the model will be fetched:
+ * one Range request of `bytes` per URL, all at once (transformers.js loads a
+ * model's weight files in parallel, and a CDN caps each connection), timed
+ * from the first byte received, so that the redirect and the time to first
+ * byte do not count as bandwidth. Measured on livre-elephant, 2026-11-14:
+ * whole-request timing of one 4 MB range said 5.4 MB/s; the model's 3.1 GB
+ * then came down in 170 s, 18 MB/s. Undefined on failure.
+ * @param {string|string[]} urls
+ */
+export async function measureBandwidth(urls, bytes, env = globalThis) {
+  urls = [].concat(urls || []).filter(Boolean);
+  if (!urls.length || !env.fetch) return undefined;
   const now = () => (env.performance ? env.performance.now() : Date.now());
   try {
     const t0 = now();
-    const res = await env.fetch(url, { headers: { Range: `bytes=0-${bytes - 1}` }, cache: 'no-store' });
-    if (!res.ok) return undefined;
-    const got = (await res.arrayBuffer()).byteLength;
-    const seconds = (now() - t0) / 1000;
+    const runs = await Promise.all(urls.map(async (url) => {
+      const res = await env.fetch(url, { headers: { Range: `bytes=0-${bytes - 1}` }, cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const reader = res.body && res.body.getReader ? res.body.getReader() : null;
+      if (!reader) return { got: (await res.arrayBuffer()).byteLength, first: t0, after: null };
+      let got = 0, after = 0, first = null;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        got += value.byteLength;
+        if (first === null) first = now(); else after += value.byteLength;
+      }
+      return { got, first, after };
+    }));
+    const end = now();
+    const got = runs.reduce((a, r) => a + r.got, 0);
+    // Without a stream to read, the whole request is all there is to time.
+    const streamed = runs.every((r) => r.after !== null && r.first !== null);
+    const start = streamed ? Math.min(...runs.map((r) => r.first)) : t0;
+    const counted = streamed ? runs.reduce((a, r) => a + r.after, 0) : got;
+    const seconds = (end - start) / 1000;
     // Under ~1 MB or ~50 ms, latency dominates and the figure means nothing.
-    return got >= 1e6 && seconds > 0.05 ? got / seconds : undefined;
+    return got >= 1e6 * urls.length && seconds > 0.05 ? counted / seconds : undefined;
   } catch (e) {
     return undefined;
   }

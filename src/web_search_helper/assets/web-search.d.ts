@@ -98,7 +98,7 @@ export type Reason = 'ok' | 'cached' | 'webgpu' | 'mobile' | 'network' | 'device
 /** The twin of best_engine_ai_helper.browser.choose. */
 export function chooseRung(plan: WriterPlan, device: Device): { candidate: Rung | null; reason: Reason; seconds: number | null };
 export function probeDevice(plan: WriterPlan, env?: typeof globalThis): Promise<Device>;
-export function measureBandwidth(url: string, bytes: number, env?: typeof globalThis): Promise<number | undefined>;
+export function measureBandwidth(urls: string | string[], bytes: number, env?: typeof globalThis): Promise<number | undefined>;
 
 export interface WrittenAnswer {
   text: string;

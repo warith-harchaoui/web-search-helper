@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- The bandwidth probe measures the line the way the model will load: one
+  Range request per weight shard, all at once, timed from the first byte.
+  On livre-elephant the old probe (one shard, whole request) said 5.4 MB/s
+  where the model's 3.1 GB came down at 18 MB/s, and withheld the writer
+  from a line that could take it; the new one reads 11 to 23 MB/s there.
+  `measureBandwidth` takes one URL or several.
 - Excerpts never cut a TeX formula. A window bound inside `$$…$$`, `\[…\]`
   or `\(…\)` moves out of it, in search.php and engine.py alike. Found on a
   book whose display formulas run past the 400 characters that sentence
