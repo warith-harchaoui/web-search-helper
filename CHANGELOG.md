@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-11-15
+
+First release on PyPI.
+
+- A pre-push gate (ruff, then the full test suite on the commit being
+  pushed), a test that refuses any machine path or hard-coded absolute path
+  in tracked files, and CI actions off Node 20, as across the suite.
+
 - The bandwidth probe measures the line the way the model will load: one
   Range request per weight shard, all at once, timed from the first byte.
   On livre-elephant the old probe (one shard, whole request) said 5.4 MB/s

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "web-search-helper"
-version = "0.1.0"
+version = "0.2.0"
 description = "Search a private corpus from a website with PHP only: index it on your machine, serve it with one PHP file, embed the question in the browser. The corpus is never published; visitors get short excerpts, or an honest 'I cannot answer'."
 readme = "README.md"
 requires-python = ">=3.10"
