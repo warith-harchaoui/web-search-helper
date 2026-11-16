@@ -14,13 +14,14 @@ dotfiles, a file left halfway); the page still displays.
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 import time
 import urllib.error
 import urllib.request
 from importlib import resources
 from pathlib import Path
+
+import os_helper as osh
 
 from .index import HEADER
 
@@ -47,14 +48,14 @@ def install(
     ``demo`` also copies the bilingual demo page as ``demo.html``.
     """
     site = Path(site)
-    site.mkdir(parents=True, exist_ok=True)
+    osh.make_directory(str(site))
     written = []
-    for name in ASSETS:
-        written.append(Path(shutil.copy2(asset(name), site / name)))
-    if demo:
-        written.append(Path(shutil.copy2(asset("demo.html"), site / "demo.html")))
+    # The endpoint, the client, its types and the writer plan, then the demo.
+    for name in ASSETS + (("demo.html",) if demo else ()):
+        osh.copyfile(str(asset(name)), str(site / name))
+        written.append(site / name)
     data = site / data_dir
-    data.mkdir(exist_ok=True)
+    osh.make_directory(str(data))
     (data / ".htaccess").write_text(DENY, encoding="utf-8")
     written.append(data / ".htaccess")
     for ix in indexes:
@@ -64,8 +65,8 @@ def install(
                 raise ValueError(f"{ix} is not a web-search-helper index")
         dest = data / ix.name
         # Built straight into the site folder: already in place.
-        if not (dest.exists() and dest.samefile(ix)):
-            shutil.copy2(ix, dest)
+        if not (osh.file_exists(str(dest)) and dest.samefile(ix)):
+            osh.copyfile(str(ix), str(dest))
         written.append(dest)
     if data_dir != "search-data":
         # search.php looks in ./search-data unless told otherwise.
@@ -77,6 +78,7 @@ def install(
             1,
         )
         wrapper.write_text(body, encoding="utf-8")
+    osh.info(f"installed into {site}: {len(written)} files")
     return written
 
 
@@ -165,12 +167,9 @@ def bench(index: str | Path, runs: int = 5, question: str = "test question", php
     rule judges the ABSOLUTE best cosine, which an approximate index may miss.
     So the exhaustive scan stays as long as this measure fits the budget.
     """
-    import tempfile
-
-    with tempfile.NamedTemporaryFile("w", suffix=".php", delete=False) as f:
-        f.write(BENCH)
-        script = f.name
-    try:
+    # os-helper owns the temporary file: named, then removed whatever happens.
+    with osh.temporary_filename(suffix=".php", mode="w") as script:
+        Path(script).write_text(BENCH, encoding="utf-8")
         out = subprocess.run(
             [
                 php,
@@ -186,6 +185,4 @@ def bench(index: str | Path, runs: int = 5, question: str = "test question", php
             text=True,
             check=True,
         )
-    finally:
-        Path(script).unlink(missing_ok=True)
     return json.loads(out.stdout)

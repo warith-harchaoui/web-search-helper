@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import click
+import os_helper as osh
 
 from . import __version__
 
@@ -189,17 +190,15 @@ def bench(index, runs, question, budget_ms):
     r = run(index, runs, question)
     click.echo(json.dumps(r, indent=2))
     if r.get("slowing_extensions"):
-        click.echo(
+        osh.warning(
             f"warning: {', '.join(r['slowing_extensions'])} loaded; it slows PHP loops several "
             "times over and is rarely on a production server. Measure there too "
-            "(check-online reports the endpoint's time).",
-            err=True,
+            "(check-online reports the endpoint's time)."
         )
     if r["search_ms_median"] > budget_ms:
-        click.echo(
+        osh.error(
             f"median {r['search_ms_median']:.0f} ms is over the {budget_ms:g} ms budget: "
-            "time to consider an approximate index (see ann-router).",
-            err=True,
+            "time to consider an approximate index (see ann-router)."
         )
         sys.exit(1)
 

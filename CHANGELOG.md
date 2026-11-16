@@ -8,6 +8,11 @@ file. Nothing changes in the search itself: `search.php`, `engine.py` and
 
 - CI renamed `ci.yml` (badges follow): ruff pinned to 0.15.21, tests on
   Python 3.10 and 3.13, PHP checked before the parity test.
+- Depends on `os-helper>=4.2,<5`, like every member: directories, copies,
+  existence checks and the bench's temporary PHP file go through it, and so
+  do the logs (`osh.info`, `osh.warning`, `osh.error`). The bench's warnings
+  still reach stderr by default; the new info lines stay silent unless
+  `osh.verbosity(1)` asks for them.
 
 ## [0.2.0] — 2026-11-15
 

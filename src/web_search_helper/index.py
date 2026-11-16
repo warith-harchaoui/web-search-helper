@@ -40,6 +40,7 @@ from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
+import os_helper as osh
 
 from .corpus import Passage
 from .embed import Embedder, window_texts
@@ -294,10 +295,13 @@ def from_bytes(data: bytes) -> Index:
 
 def save(idx: Index, path: str | Path) -> Path:
     path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    osh.make_directory(str(path.parent))
+    # Written beside the target, then renamed over it: a reader (search.php,
+    # the API) never sees half an index.
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_bytes(to_bytes(idx))
     tmp.replace(path)
+    osh.info(f"index written: {path} ({len(idx.passages)} passages, {len(idx.vectors)} windows)")
     return path
 
 

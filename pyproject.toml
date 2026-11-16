@@ -17,12 +17,16 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
     "Intended Audience :: Developers",
 ]
-# Core: building with the hash embedder (dry runs, tests) needs only numpy and
-# click. The real model is the [embed] extra, because sentence-transformers
-# pulls torch.
+# Core: building with the hash embedder (dry runs, tests) needs only numpy,
+# click and os-helper, the suite's foundation for logging and file management
+# (the floor follows the suite's current os-helper line; the functions called
+# here, file_exists, make_directory, copyfile, temporary_filename and the
+# logging calls, are older than it). The real model is the [embed] extra, because
+# sentence-transformers pulls torch.
 dependencies = [
     "click>=8.1,<9",
     "numpy>=1.24",
+    "os-helper>=4.2,<5",
 ]
 
 [project.optional-dependencies]

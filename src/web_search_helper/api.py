@@ -40,6 +40,7 @@ except ImportError as exc:  # pragma: no cover - exercised only without the extr
     ) from exc
 
 import numpy as np
+import os_helper as osh
 
 from . import __version__
 from .calibrate import calibrate as run_calibrate
@@ -64,7 +65,7 @@ def get_index(lang: str) -> Index:
     if not _LANG.match(lang):
         raise HTTPException(400, "lang")
     p = data_dir() / f"{lang}.php"
-    if not p.exists():
+    if not osh.file_exists(str(p)):
         raise HTTPException(404, f"no index for {lang!r} in {data_dir()}")
     return _index(str(p), p.stat().st_mtime)
 

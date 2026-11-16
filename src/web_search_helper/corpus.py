@@ -26,6 +26,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import os_helper as osh
+
 
 @dataclass
 class Passage:
@@ -112,7 +114,7 @@ def read_folder(folder: str | Path, target_words: int = 220) -> list[Passage]:
     folder = Path(folder)
     out: list[Passage] = []
     for f in sorted(folder.rglob("*")):
-        if f.suffix.lower() in {".md", ".markdown", ".txt"} and f.is_file():
+        if f.suffix.lower() in {".md", ".markdown", ".txt"} and osh.file_exists(str(f)):
             out.extend(passages_from_markdown(f.read_text(encoding="utf-8"), f.name, target_words))
     return out
 
@@ -120,8 +122,12 @@ def read_folder(folder: str | Path, target_words: int = 220) -> list[Passage]:
 def read_corpus(path: str | Path, target_words: int = 220) -> list[Passage]:
     """A ``.jsonl`` file, a single Markdown/text file, or a folder of them."""
     path = Path(path)
-    if path.is_dir():
-        return read_folder(path, target_words)
-    if path.suffix.lower() == ".jsonl":
-        return read_jsonl(path)
-    return passages_from_markdown(path.read_text(encoding="utf-8"), path.name, target_words)
+    # A folder, a JSONL file or a single Markdown/text file, in that order.
+    if osh.dir_exists(str(path)):
+        passages = read_folder(path, target_words)
+    elif path.suffix.lower() == ".jsonl":
+        passages = read_jsonl(path)
+    else:
+        passages = passages_from_markdown(path.read_text(encoding="utf-8"), path.name, target_words)
+    osh.info(f"{path}: {len(passages)} passages read")
+    return passages
