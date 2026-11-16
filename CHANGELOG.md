@@ -17,6 +17,9 @@ file. Nothing changes in the search itself: `search.php`, `engine.py` and
   and checked by `tests/test_requirements_mirror_pyproject.py`),
   `requirements-dev.txt`, `environment.yaml`, and in `assets/` the Poetry
   helpers `requirements_to_toml.py` and `manual_poetry.sh`.
+- `CODING.md` (the suite's coding standard) and `CONTRIBUTING.md`, which
+  states the parity rule: a change to ranking, verdict, excerpts or tokenizer
+  lands in `engine.py` and `search.php` in the same commit.
 
 ## [0.2.0] — 2026-11-15
 
