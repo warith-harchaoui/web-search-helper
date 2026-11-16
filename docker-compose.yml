@@ -1,0 +1,46 @@
+# web-search-helper: Compose entry point for the container image next to this file.
+#
+#   docker compose up --build      # HTTP API on http://localhost:8040, page at /gui
+#   docker compose run --rm web-search-helper web-search-helper --help   # one-shot CLI instead
+#
+# The image installs the [api] extra, so the FastAPI app is what it serves.
+# Per the suite's rule, MCP is never a second implementation: with the [mcp]
+# extra (build-arg WITH_MCP=1), fastapi-mcp mounts /mcp onto this very app and
+# each tool *is* one of these routes. The production search endpoint stays
+# search.php on the PHP host; this container is the HTTP door to the same
+# engine.
+
+services:
+  web-search-helper:
+    build:
+      context: .
+      args:
+        # 1 adds sentence-transformers (~2 GB), for POST /search and /calibrate.
+        WITH_EMBED: "${WSH_WITH_EMBED:-0}"
+        WITH_MCP: "${WSH_WITH_MCP:-0}"
+    image: web-search-helper:local
+    ports:
+      - "${WSH_PORT:-8040}:8040"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      WSH_DATA_DIR: /data/search-data
+    # The indexes, one <lang>.php per language, as `web-search-helper install`
+    # lays them out in a site folder. Read-only: the API never writes them.
+    volumes:
+      - ./search-data:/data/search-data:ro
+    restart: unless-stopped
+    healthcheck:
+      # python, not curl: the slim image ships no HTTP client, and adding one
+      # just for a probe would grow the image for nothing.
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import sys, urllib.request
+          sys.exit(0 if urllib.request.urlopen("http://localhost:8040/health", timeout=3).status == 200 else 1)
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # Generous: the first request pays for module imports.
+      start_period: 20s

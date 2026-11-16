@@ -206,6 +206,14 @@ nothing); `POST /check-online`. The MCP tools are `indexes`, `search`,
 `skills/web-search-helper/`; `TRIGGERS.md` lists what should reach for this
 helper and what should not, and a test keeps it identical to the skill's copy.
 
+The API also ships as a container (`Dockerfile`, `docker-compose.yml`): it
+reads the indexes from `./search-data`, mounted read-only, and serves port
+8040 with a `/health` probe.
+
+```bash
+docker compose up --build      # http://localhost:8040/gui?lang=fr
+```
+
 ## Bring your own embeddings
 
 A site that already embeds its corpus can keep its vectors and only hand the

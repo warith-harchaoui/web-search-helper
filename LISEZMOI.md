@@ -215,6 +215,14 @@ prend une question en clair et la vectorise côté serveur ; `GET /indexes` ;
 à cette brique puis ce qui ne le devrait pas ; un test le garde identique à la
 copie de la compétence.
 
+L'API existe aussi en conteneur (`Dockerfile`, `docker-compose.yml`) : elle
+lit les index dans `./search-data`, monté en lecture seule, puis sert le port
+8040 avec une sonde `/health`.
+
+```bash
+docker compose up --build      # http://localhost:8040/gui?lang=fr
+```
+
 ## Apporter ses propres vecteurs
 
 Un site qui vectorise déjà son corpus peut garder ses vecteurs et ne confier

@@ -28,6 +28,9 @@ file. Nothing changes in the search itself: `search.php`, `engine.py` and
 - Fix: `/gui` never offered the written answer, because the API did not
   serve the `writer-plan.json` that `web-search.js` fetches next to itself.
   It does now, and the API gains `GET /health` (not an MCP tool).
+- `Dockerfile` and `docker-compose.yml`: the HTTP API on port 8040, indexes
+  mounted read-only from `./search-data` (`WSH_DATA_DIR`), a healthcheck on
+  `/health`; build-args `WITH_EMBED=1` and `WITH_MCP=1` add those extras.
 
 ## [0.2.0] — 2026-11-15
 
