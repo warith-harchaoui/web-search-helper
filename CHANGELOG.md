@@ -31,6 +31,13 @@ file. Nothing changes in the search itself: `search.php`, `engine.py` and
 - `Dockerfile` and `docker-compose.yml`: the HTTP API on port 8040, indexes
   mounted read-only from `./search-data` (`WSH_DATA_DIR`), a healthcheck on
   `/health`; build-args `WITH_EMBED=1` and `WITH_MCP=1` add those extras.
+- `scripts/check_triggers.py`, run by `tests/test_skill.py`: every capability
+  must be named in the skill's description, under the 1024-character cap,
+  with a SKIP clause, and `TRIGGERS.md` must mirror the skill's copy. It found
+  two capabilities the description left out, the written answer in the
+  browser and the leak check after upload; both are named now, and in the
+  trigger catalogue. `skills/README.md` (installing the skill) and
+  `references/surfaces.md` (library, website files, HTTP API, MCP, `/gui`).
 
 ## [0.2.0] — 2026-11-15
 

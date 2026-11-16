@@ -2,19 +2,20 @@
 name: web-search-helper
 description: >-
   Add a search box to a website over a corpus that must NOT be published (a
-  manuscript, a course, an internal knowledge base), when the host offers PHP
-  and nothing else. Indexes locally, serves from one PHP file, embeds the
-  question in the browser, returns short excerpts or an honest "I cannot
-  answer", and composes an answer from the corpus's own sentences.
-  Fires on "search my book / course / docs from my website", "RAG without a
-  backend", "semantic search in PHP", "client-side search without publishing
-  the corpus", "the search JSON exposes my whole text", "calibrate the 'I
-  don't know' threshold", "rechercher dans mon livre depuis mon site",
-  "recherche sémantique en PHP", and on `web-search-helper`, `import
-  web_search_helper as wsh`. Do NOT use to choose a vector database
-  (ann-router), to run a local LLM (best-engine-ai-helper), or for a public
-  static site whose corpus may be shipped whole (a client-only index fits
-  there). The trigger catalogue is in `references/triggers.md`.
+  manuscript, a course, an internal knowledge base) when the host offers only
+  PHP. Indexes locally, serves from one PHP file, embeds the question in the
+  browser, returns short excerpts or an honest "I cannot answer", composes an
+  answer from the corpus's own sentences (or a written answer by an
+  in-browser LLM that cites them), and checks after upload that nothing
+  leaks. Fires on "search my book / course / docs from my website", "RAG
+  without a backend", "semantic search in PHP", "client-side search without
+  publishing the corpus", "calibrate the 'I don't know' threshold",
+  "rechercher dans mon livre depuis mon site", "recherche sémantique en PHP",
+  and on `web-search-helper`, `import web_search_helper as wsh`. Do NOT use to
+  choose a vector database (ann-router), to run a local LLM
+  (best-engine-ai-helper), or for a public static site whose corpus may be
+  shipped whole (a client-only index fits there). Full catalogue:
+  `references/triggers.md`.
 license: BSD-3-Clause
 metadata:
   author: Warith Harchaoui
@@ -73,4 +74,6 @@ One index per language; the page says which language it asks. In the page:
   never pick a model by hand. A written answer that fails `checkGrounding` is
   set aside.
 
-For every flag, read `references/cli-reference.md`.
+For every flag, read `references/cli-reference.md`. For the library, the
+files shipped to the website, the HTTP API, MCP and the `/gui` page, read
+`references/surfaces.md`.

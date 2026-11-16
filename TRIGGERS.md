@@ -10,6 +10,10 @@
 - "the search should say 'I don't know' instead of answering anything"
 - "calibrate / measure the refusal threshold of my search"
 - "compose an answer from the passages without an LLM", "extractive answer"
+- "write the answer with a small LLM in the visitor's browser", "in-browser
+  LLM answer that cites the passages"
+- "check that my uploaded search does not leak the corpus", "is my index
+  file served?"
 - "transformers.js question embedding + server-side ranking"
 - "rechercher dans mon livre depuis mon site", "RAG sans backend", "recherche
   sémantique en PHP", "le site ne doit pas publier le livre", "Je ne sais pas
