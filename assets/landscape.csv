@@ -1,0 +1,10 @@
+Site Search,Corpus stays private,PHP-only hosting,No third-party service,Semantic matching,Honest refusal,Written answer,Typo tolerance,Easy setup,Scale
+web-search-helper,5,5,4,4,5,5,2,3,2
+Pagefind,1,5,5,1,2,2,2,5,4
+Lunr.js,1,5,5,1,2,1,3,4,2
+Fuse.js,1,5,5,1,2,1,5,5,1
+Orama,2,4,4,4,3,3,4,4,2
+Algolia,2,4,1,4,2,3,5,4,5
+Meilisearch,3,2,5,4,3,3,5,3,4
+Typesense,3,2,5,4,3,3,5,4,4
+Elasticsearch,3,1,5,4,3,2,4,1,5

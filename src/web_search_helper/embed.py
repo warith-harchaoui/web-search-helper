@@ -56,7 +56,12 @@ class SentenceTransformerEmbedder:
         self.name = name
         self.browser = browser or MODELS[name]
         self.model = SentenceTransformer(name)
-        self.dim = int(self.model.get_sentence_embedding_dimension())
+        # sentence-transformers 5.5 renamed the getter; the floor (>=3) only has the old name.
+        dim = (
+            getattr(self.model, "get_embedding_dimension", None)
+            or self.model.get_sentence_embedding_dimension
+        )
+        self.dim = int(dim())
         # Two tokens go to the start and end markers.
         self.window = int(self.model.max_seq_length) - 2
 

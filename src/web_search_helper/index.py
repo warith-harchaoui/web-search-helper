@@ -8,17 +8,17 @@ is enough for that).
 
 Layout after the header (little-endian):
 
-=========  ====================================================================
-``WSH1``   magic
-u32 + JSON metadata: config, thresholds, passages, section of each passage
-u32 × 4    number of vectors, sections, words, bytes of postings
-f32        window vectors, ``n_vec × dim``, passages in order
-f32        section centroids, ``n_sec × dim``
-u32 + str  the lexicon, words joined by ``\\n``, in order of first appearance
-u32        ``n_words + 1`` offsets into the postings
-(u32,u16)  postings: (passage, term frequency), passages in increasing order
-u32        length of each passage in tokens
-=========  ====================================================================
+==========  ====================================================================
+``WSH1``    magic
+u32 + JSON  metadata: config, thresholds, passages, section of each passage
+u32 × 4     number of vectors, sections, words, bytes of postings
+f32         window vectors, ``n_vec × dim``, passages in order
+f32         section centroids, ``n_sec × dim``
+u32 + str   the lexicon, words joined by ``\\n``, in order of first appearance
+u32         ``n_words + 1`` offsets into the postings
+(u32,u16)   postings: (passage, term frequency), passages in increasing order
+u32         length of each passage in tokens
+==========  ====================================================================
 
 Everything that can be computed once is computed here, so that a request only
 reads: the lexical index, the section centroids, the window offsets.

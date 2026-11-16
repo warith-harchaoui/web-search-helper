@@ -22,7 +22,13 @@ visitor's browser and writes the answer from the excerpts, citing them; which
 model depends on the visitor's machine and line, as planned by
 [`best-engine-ai-helper`](https://github.com/warith-harchaoui/best-engine-ai-helper).
 
-BSD 3-Clause licence. Author: Warith Harchaoui.
+## Documentation
+
+[💻 Documentation](https://deraison.ai/ai-helpers/docs/web-search-helper-doc/)
+
+[🗺️ Landscape](https://github.com/warith-harchaoui/web-search-helper/blob/main/LANDSCAPE.md)
+
+[📋 Examples](https://github.com/warith-harchaoui/web-search-helper/blob/main/EXAMPLES.md)
 
 ## Why
 
@@ -73,6 +79,32 @@ when it goes over budget.
 
 Someone patient with thousands of well-chosen questions can still collect a
 good part of the corpus. These measures make that slow, not impossible.
+
+## Installation
+
+Two machines, two needs. Where you index (your own computer): Python 3.10 or
+later. Where the site is served: PHP 7.4 or later with `mbstring`, nothing
+else; no Python, no database.
+
+```bash
+pip install web-search-helper                 # engine, PHP export, CLI; hashing embedder only
+pip install 'web-search-helper[embed]'        # + sentence-transformers, the real embedder
+pip install 'web-search-helper[api,mcp,embed]'  # + the HTTP API, /gui and the MCP server
+pip install 'web-search-helper[route]'        # + ann-router's advice next to the PHP timing
+```
+
+From a clone:
+
+```bash
+git clone https://github.com/warith-harchaoui/web-search-helper.git
+cd web-search-helper
+pip install -e '.[embed,api,mcp,dev]'
+git config core.hooksPath .githooks     # the pre-push gate: ruff, then the full test suite
+```
+
+The tests that compare `engine.py` with `search.php` need `php` on the PATH
+(`brew install php` on macOS, `sudo apt install php-cli php-mbstring` on
+Ubuntu).
 
 ## Quick start
 
@@ -206,3 +238,11 @@ runs both on the same questions and fails if they disagree.
 - One index per language; the page says which language it asks.
 - The first question downloads the model in the browser (about 120 MB for the
   default multilingual MiniLM), then the browser keeps it.
+
+## Author
+
+[Warith HARCHAOUI](https://deraison.ai), Ph.D.
+
+## License
+
+BSD-3-Clause; see [LICENSE](https://github.com/warith-harchaoui/web-search-helper/blob/main/LICENSE).
