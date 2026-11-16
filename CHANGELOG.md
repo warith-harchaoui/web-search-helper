@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-11-16
+
 The repository follows the suite's reference member (audio-helper) file for
 file. Nothing changes in the search itself: `search.php`, `engine.py` and
 `web-search.js` answer exactly as in 0.2.0.
