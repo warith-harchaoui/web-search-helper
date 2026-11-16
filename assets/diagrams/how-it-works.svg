@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 584" width="1240" height="584" role="img" aria-labelledby="wsh-title wsh-desc" font-family="Roboto, 'Helvetica Neue', Arial, sans-serif">
+  <title id="wsh-title">How web-search-helper works: index on your machine, search in one PHP file, embed and answer in the visitor's browser</title>
+  <desc id="wsh-desc">Three panels, left to right. Your machine, once: a corpus (JSONL, Markdown or a folder) is cut into passages, embedded and indexed with BM25 postings, into one index file per language that answers 404 when requested by URL. The index file is uploaded once to the server. The server, PHP only: search.php ranks passages by BM25 and by cosine, fuses the two rankings, then a verdict decides whether the corpus treats the question; if it does, it returns short excerpts, otherwise an honest I cannot answer and nothing else. The visitor's browser: web-search.js embeds the question with transformers.js and sends it with its vector to search.php, then composes an answer from the corpus's own sentences; optionally a small language model in the browser writes an answer that cites the excerpts, its model planned by best-engine-ai-helper. Underneath, the Python package reached through the four surfaces every member of the suite exposes, with os-helper for logging and file management. The caption: the corpus is never published; a visitor only receives excerpts that answer a question.</desc>
+  <style>
+    .panel      { fill: #ffffff; stroke: #d6d6d6; stroke-width: 1.5; }
+    .panel-label{ fill: #6b6b6b; font-size: 13px; font-weight: 600; letter-spacing: .08em; }
+    .io         { fill: #F8F8F8; stroke: #9a9a9a; stroke-width: 1.5; }
+    .stage      { fill: #FFF4E0; stroke: #FF9500; stroke-width: 1.5; }
+    .optional   { fill: #FFFBF3; stroke: #FF9500; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .refusal    { fill: #F8F8F8; stroke: #9a9a9a; stroke-width: 1.5; stroke-dasharray: 4 3; }
+    .core       { fill: #007AFF; stroke: #0062CC; stroke-width: 1.5; }
+    .surface    { fill: #EAF3FF; stroke: #007AFF; stroke-width: 1.5; }
+    .n-title    { font-size: 15px; font-weight: 600; fill: #111111; }
+    .n-sub      { font-size: 12px; fill: #5a5a5a; }
+    .on-dark    { fill: #ffffff; font-size: 15px; font-weight: 600; }
+    .on-dark-sub{ fill: #d8e8ff; font-size: 12px; }
+    .flow       { fill: none; stroke: #9a9a9a; stroke-width: 2; }
+    .flow-opt   { fill: none; stroke: #9a9a9a; stroke-width: 2; stroke-dasharray: 5 4; }
+    .tie        { fill: none; stroke: #007AFF; stroke-width: 1.5; }
+    .wire       { font-size: 11px; fill: #5a5a5a; }
+    .caption    { font-size: 12.5px; fill: #5a5a5a; font-style: italic; }
+    .surf-label { font-size: 13px; font-weight: 600; fill: #0062CC; }
+
+    @media (prefers-color-scheme: dark) {
+      .panel      { fill: #1b1b1d; stroke: #3a3a3d; }
+      .panel-label{ fill: #a0a0a6; }
+      .io         { fill: #2a2a2e; stroke: #6f6f76; }
+      .refusal    { fill: #2a2a2e; stroke: #6f6f76; }
+      .stage      { fill: #3a2d12; stroke: #FF9500; }
+      .optional   { fill: #2a2210; stroke: #FF9500; }
+      .surface    { fill: #10243d; stroke: #4da2ff; }
+      .n-title    { fill: #f2f2f4; }
+      .n-sub      { fill: #b4b4ba; }
+      .flow, .flow-opt { stroke: #7a7a82; }
+      .tie        { stroke: #4da2ff; }
+      .wire       { fill: #b4b4ba; }
+      .caption    { fill: #a0a0a6; }
+      .surf-label { fill: #4da2ff; }
+    }
+  </style>
+  <defs><marker id="wsh-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9a9a9a"/></marker></defs>
+  <rect class="panel" x="28" y="54" width="340" height="276" rx="12"/>
+  <text class="panel-label" x="48" y="40">YOUR MACHINE, ONCE</text>
+  <rect class="panel" x="450" y="54" width="340" height="276" rx="12"/>
+  <text class="panel-label" x="470" y="40">THE SERVER, PHP ONLY</text>
+  <rect class="panel" x="872" y="54" width="340" height="276" rx="12"/>
+  <text class="panel-label" x="892" y="40">THE VISITOR'S BROWSER</text>
+  <rect class="io" x="48" y="74" width="300" height="62" rx="10"/>
+  <text class="n-title" x="198" y="100" text-anchor="middle">corpus</text>
+  <text class="n-sub" x="198" y="118" text-anchor="middle">JSONL, Markdown or a folder</text>
+  <path class="flow" d="M198 138 V156" marker-end="url(#wsh-arrow)"/>
+  <rect class="stage" x="48" y="160" width="300" height="62" rx="10"/>
+  <text class="n-title" x="198" y="186" text-anchor="middle">cut + embed + index</text>
+  <text class="n-sub" x="198" y="204" text-anchor="middle">sentence-transformers, BM25 postings</text>
+  <path class="flow" d="M198 224 V242" marker-end="url(#wsh-arrow)"/>
+  <rect class="io" x="48" y="246" width="300" height="62" rx="10"/>
+  <text class="n-title" x="198" y="272" text-anchor="middle">search-data/fr.php</text>
+  <text class="n-sub" x="198" y="290" text-anchor="middle">one per language, 404 by URL</text>
+  <path class="flow" d="M350 277 H428 V105 H464" marker-end="url(#wsh-arrow)"/>
+  <text class="wire" x="0" y="0" text-anchor="middle" transform="translate(418 191) rotate(-90)">uploaded once</text>
+  <rect class="stage" x="470" y="74" width="300" height="62" rx="10"/>
+  <text class="n-title" x="620" y="100" text-anchor="middle">search.php</text>
+  <text class="n-sub" x="620" y="118" text-anchor="middle">BM25 + cosines, rank fusion</text>
+  <path class="flow" d="M620 138 V156" marker-end="url(#wsh-arrow)"/>
+  <rect class="stage" x="470" y="160" width="300" height="62" rx="10"/>
+  <text class="n-title" x="620" y="186" text-anchor="middle">verdict</text>
+  <text class="n-sub" x="620" y="204" text-anchor="middle">does the corpus treat it?</text>
+  <path class="flow" d="M560 224 V242" marker-end="url(#wsh-arrow)"/>
+  <path class="flow" d="M680 224 V242" marker-end="url(#wsh-arrow)"/>
+  <rect class="io" x="470" y="246" width="144" height="62" rx="10"/>
+  <text class="n-title" x="542" y="272" text-anchor="middle">excerpts</text>
+  <text class="n-sub" x="542" y="290" text-anchor="middle">best windows only</text>
+  <rect class="refusal" x="626" y="246" width="144" height="62" rx="10"/>
+  <text class="n-title" x="698" y="272" text-anchor="middle">I cannot answer</text>
+  <text class="n-sub" x="698" y="290" text-anchor="middle">and nothing else</text>
+  <path class="flow" d="M890 105 H776" marker-end="url(#wsh-arrow)"/>
+  <text class="wire" x="831" y="124" text-anchor="middle">question</text>
+  <text class="wire" x="831" y="138" text-anchor="middle">+ its vector</text>
+  <path class="flow" d="M772 191 H886" marker-end="url(#wsh-arrow)"/>
+  <text class="wire" x="831" y="210" text-anchor="middle">excerpts</text>
+  <text class="wire" x="831" y="224" text-anchor="middle">or refusal</text>
+  <rect class="stage" x="892" y="74" width="300" height="62" rx="10"/>
+  <text class="n-title" x="1042" y="100" text-anchor="middle">embed the question</text>
+  <text class="n-sub" x="1042" y="118" text-anchor="middle">web-search.js + transformers.js</text>
+  <rect class="stage" x="892" y="160" width="300" height="62" rx="10"/>
+  <text class="n-title" x="1042" y="186" text-anchor="middle">compose the answer</text>
+  <text class="n-sub" x="1042" y="204" text-anchor="middle">the corpus's own sentences</text>
+  <path class="flow-opt" d="M1042 224 V242" marker-end="url(#wsh-arrow)"/>
+  <rect class="optional" x="892" y="246" width="300" height="62" rx="10"/>
+  <text class="n-title" x="1042" y="272" text-anchor="middle">written answer, optional</text>
+  <text class="n-sub" x="1042" y="290" text-anchor="middle">in-browser LLM, plan by best-engine</text>
+  <rect class="core" x="370" y="372" width="500" height="54" rx="10"/>
+  <text class="on-dark" x="620" y="393" text-anchor="middle">one Python package, called the same way everywhere</text>
+  <text class="on-dark-sub" x="620" y="412" text-anchor="middle">os-helper underneath for logging and file management</text>
+  <path class="tie" d="M620 426 V454"/>
+  <path class="tie" d="M341 454 H899"/>
+  <path class="tie" d="M341 454 V472"/>
+  <rect class="surface" x="256" y="472" width="170" height="46" rx="9"/>
+  <text class="surf-label" x="341" y="500" text-anchor="middle">Python API</text>
+  <path class="tie" d="M527 454 V472"/>
+  <rect class="surface" x="442" y="472" width="170" height="46" rx="9"/>
+  <text class="surf-label" x="527" y="500" text-anchor="middle">CLI (click)</text>
+  <path class="tie" d="M713 454 V472"/>
+  <rect class="surface" x="628" y="472" width="170" height="46" rx="9"/>
+  <text class="surf-label" x="713" y="500" text-anchor="middle">FastAPI + MCP + /gui</text>
+  <path class="tie" d="M899 454 V472"/>
+  <rect class="surface" x="814" y="472" width="170" height="46" rx="9"/>
+  <text class="surf-label" x="899" y="500" text-anchor="middle">agent skill</text>
+  <text class="caption" x="620" y="558" text-anchor="middle">The corpus is never published: the server holds an index it never serves, and a visitor only receives excerpts that answer a question.</text>
+</svg>

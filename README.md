@@ -22,6 +22,29 @@ visitor's browser and writes the answer from the excerpts, citing them; which
 model depends on the visitor's machine and line, as planned by
 [`best-engine-ai-helper`](https://github.com/warith-harchaoui/best-engine-ai-helper).
 
+## The Promise
+
+web-search-helper is **private by construction**. Three honest cases:
+
+1. **Guaranteed: the corpus is never published.** The index lives in a PHP
+   file that answers an empty 404 when requested by URL, in a folder whose
+   `.htaccess` denies everything. `search.php` returns excerpts of what
+   answers the question, or nothing. The question goes to your own server
+   only, which keeps a salted hash of the visitor's address and the times of
+   its calls of the last day, for the quota, and nothing else. No telemetry,
+   no account, no third-party search service.
+2. **The caveats.** Model weights travel: sentence-transformers downloads the
+   embedding model once on your machine, and the visitor's browser downloads
+   its twin (about 120 MB) through transformers.js, then keeps it. The
+   optional written answer fetches a larger model (3.1 to 5.6 GB) into the
+   visitor's browser, only when they press its button; to decide whether to
+   offer it, the page first times a slice of its files. And someone patient, with thousands of
+   well-chosen questions, can still collect a good part of the corpus excerpt
+   by excerpt: the protections below make that slow, not impossible.
+3. **Your decision.** `check-online` verifies after each upload that no byte
+   of the corpus is served, and the thresholds that decide when to refuse are
+   yours to measure with `calibrate`.
+
 ## Documentation
 
 [💻 Documentation](https://deraison.ai/ai-helpers/docs/web-search-helper-doc/)
@@ -45,6 +68,10 @@ database. web-search-helper fits there.
 | your machine | cut, embed and index the corpus; measure the thresholds | Python ≥ 3.10, `sentence-transformers` |
 | the server | `search.php`: BM25 + cosines + fusion + verdict, returns excerpts | PHP ≥ 7.4 with mbstring |
 | the browser | `web-search.js`: embeds the question (transformers.js), composes an extractive answer, optionally writes one with an in-browser LLM | an ES-module browser; WebGPU for the written answer |
+
+## How it works
+
+![How web-search-helper works: index on your machine, search in one PHP file, embed and answer in the visitor's browser](https://raw.githubusercontent.com/warith-harchaoui/web-search-helper/main/assets/diagrams/how-it-works.png)
 
 ## How it searches
 

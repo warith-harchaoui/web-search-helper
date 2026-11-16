@@ -47,6 +47,12 @@ file. Nothing changes in the search itself: `search.php`, `engine.py` and
 - `GUI.md`: the `/gui` page, what it shows (two-pass search, excerpts or
   refusal, extractive answer, written answer when the machine can bear it)
   and what it deliberately leaves out.
+- `assets/diagrams/how-it-works` and `comment-ca-marche` (SVG, PNG): your
+  machine indexes, the PHP server searches and judges, the visitor's browser
+  embeds the question and composes the answer. Shown under "How it works" /
+  "Comment ça marche", next to a new "The Promise" / "La promesse": what is
+  guaranteed private, what travels (model weights), what remains possible
+  (patient scraping).
 
 ## [0.2.0] — 2026-11-15
 

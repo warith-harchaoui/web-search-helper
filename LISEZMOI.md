@@ -23,6 +23,32 @@ des extraits, en les citant ; le modèle dépend de la machine et de la ligne du
 visiteur, selon le plan préparé par
 [`best-engine-ai-helper`](https://github.com/warith-harchaoui/best-engine-ai-helper).
 
+## La promesse
+
+web-search-helper est **privé par construction**. Trois cas, honnêtement :
+
+1. **Garanti : le corpus n'est jamais publié.** L'index vit dans un fichier
+   PHP qui répond un 404 vide quand on le demande par son URL, dans un
+   dossier dont le `.htaccess` refuse tout. `search.php` renvoie des extraits
+   de ce qui répond à la question, sinon rien. La question ne va qu'à votre
+   propre serveur ; il garde une empreinte salée de l'adresse du visiteur
+   avec les heures de ses appels du dernier jour, pour le quota, rien
+   d'autre. Pas de télémétrie, pas de compte, pas de service de recherche
+   tiers.
+2. **Les réserves.** Les poids des modèles voyagent : sentence-transformers
+   télécharge une fois le modèle de vectorisation sur votre machine ; le
+   navigateur du visiteur télécharge son jumeau (environ 120 Mo) par
+   transformers.js, puis le garde. La réponse rédigée, en option, fait venir
+   un modèle plus lourd (3,1 à 5,6 Go) dans le navigateur du visiteur,
+   seulement quand il appuie sur son bouton ; pour décider de le proposer, la
+   page chronomètre d'abord une tranche de ses fichiers. Enfin, quelqu'un de patient, armé de milliers
+   de questions bien choisies, peut encore recueillir une bonne partie du
+   corpus, extrait après extrait : les protections décrites plus bas rendent
+   cela lent, pas impossible.
+3. **Votre décision.** `check-online` vérifie après chaque envoi qu'aucun
+   octet du corpus n'est servi ; les seuils qui décident du refus, c'est à
+   vous de les mesurer avec `calibrate`.
+
 ## Documentation
 
 [💻 Documentation](https://deraison.ai/ai-helpers/docs/web-search-helper-doc/)
@@ -46,6 +72,10 @@ base vectorielle. web-search-helper tient dans ce cadre.
 | votre machine | découper, vectoriser, indexer ; mesurer les seuils | Python ≥ 3.10, `sentence-transformers` |
 | le serveur | `search.php` : BM25, cosinus, fusion, verdict ; rend des extraits | PHP ≥ 7.4 avec mbstring |
 | le navigateur | `web-search.js` : vecteur de la question (transformers.js), réponse composée de phrases du corpus, réponse rédigée en option par un LLM dans le navigateur | un navigateur qui lit les modules ES ; WebGPU pour la réponse rédigée |
+
+## Comment ça marche
+
+![Comment web-search-helper fonctionne : l'index sur votre machine, la recherche dans un fichier PHP, la question et la réponse dans le navigateur du visiteur](https://raw.githubusercontent.com/warith-harchaoui/web-search-helper/main/assets/diagrams/comment-ca-marche.png)
 
 ## Comment il cherche
 
