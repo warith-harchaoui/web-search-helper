@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/badge/license-BSD--3--Clause-blue)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![PHP](https://img.shields.io/badge/server-PHP%20only-777BB4)
-[![tests](https://github.com/warith-harchaoui/web-search-helper/actions/workflows/tests.yml/badge.svg)](https://github.com/warith-harchaoui/web-search-helper/actions/workflows/tests.yml)
+[![CI](https://github.com/warith-harchaoui/web-search-helper/actions/workflows/ci.yml/badge.svg)](https://github.com/warith-harchaoui/web-search-helper/actions/workflows/ci.yml)
 
 **Search a private corpus from a website, with PHP as the only server.** You
 index the corpus on your machine; one PHP file answers the questions; the page

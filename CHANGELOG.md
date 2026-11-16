@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+The repository follows the suite's reference member (audio-helper) file for
+file. Nothing changes in the search itself: `search.php`, `engine.py` and
+`web-search.js` answer exactly as in 0.2.0.
+
+- CI renamed `ci.yml` (badges follow): ruff pinned to 0.15.21, tests on
+  Python 3.10 and 3.13, PHP checked before the parity test.
+
 ## [0.2.0] — 2026-11-15
 
 First release on PyPI.

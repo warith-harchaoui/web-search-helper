@@ -1,0 +1,81 @@
+name: CI
+
+# A deliberately light gate: ruff, then the test suite on the two ends of the
+# supported range (3.10, the requires-python floor, and 3.13). The heavy sweep,
+# real embedding model included, runs locally in the pre-push hook
+# (.githooks/pre-push), never here.
+#
+# The tests run on the core install (the hash embedder, no model download)
+# with the PHP that ubuntu-latest ships, so the parity test between
+# search.php and engine.py runs on every push.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: pytest (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The two ends of the range: the floor that requires-python promises,
+        # and the newest the suite runs on. The middle is not where it breaks.
+        python-version: ["3.10", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # The runner image ships PHP; checked rather than installed, so a
+      # missing mbstring fails here with a clear message instead of halfway
+      # through the parity test.
+      - name: PHP is required by the parity and server tests
+        run: php -v && php -m | grep -i mbstring
+
+      - name: Install package + dev, api and mcp extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,api,mcp]"
+
+      - name: Run the tests
+        run: python -m pytest
+
+  lint:
+    name: ruff
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # No continue-on-error: a lint or format violation blocks merging, exactly
+    # like a failing test.
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install ruff
+        # Pinned: an unpinned install let ruff 0.16 make Markdown code-fence
+        # formatting the default, silently breaking format-check on doc
+        # examples. Bump this deliberately, not by surprise.
+        run: pip install "ruff==0.15.21"
+      # `.` rather than a file list, so this gate and the pre-push hook read
+      # the same scope out of pyproject.toml.
+      - name: Run ruff check
+        run: ruff check .
+      - name: Run ruff format check
+        run: ruff format --check .
