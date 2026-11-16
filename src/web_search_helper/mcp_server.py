@@ -16,7 +16,6 @@ Author: Warith Harchaoui <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-
 try:
     from fastapi_mcp import FastApiMCP
 except ImportError as exc:  # pragma: no cover - exercised only without the extra

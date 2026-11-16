@@ -35,7 +35,7 @@ def _scripts() -> list[tuple[str, str, str]]:
     # Read rather than parsed: ``tomllib`` is 3.11+.
     manifest = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     block = manifest.split("[project.scripts]", 1)[1].split("\n[", 1)[0]
-    return re.findall(r'^([\w-]+)\s*=\s*"([\w.]+):(\w+)"', block, re.M)
+    return re.findall(r'^([\w-]+)\s*=\s*"([\w.]+):(\w+)"', block, re.MULTILINE)
 
 
 def test_the_scripts_are_found() -> None:
@@ -64,6 +64,7 @@ def test_the_command_answers_help(name: str, module: str, func: str) -> None:
         timeout=60,
         cwd=ROOT,
         env=env,
+        check=False,
     )
     assert proc.returncode == 0, proc.stderr[-800:]
     assert "Usage:" in proc.stdout, proc.stdout[:400]

@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 def _declared() -> set[str]:
     """The ``[project] dependencies`` array of pyproject.toml, as written."""
     text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    match = re.search(r"^dependencies\s*=\s*\[(.*?)^\]", text, re.S | re.M)
+    match = re.search(r"^dependencies\s*=\s*\[(.*?)^\]", text, re.DOTALL | re.MULTILINE)
     assert match, "pyproject.toml has no [project] dependencies array"
     # Comments inside the array may quote specifiers too, so they go before
     # anything is read as a dependency.
