@@ -44,6 +44,9 @@ file. Nothing changes in the search itself: `search.php`, `engine.py` and
   definitions (40 lines, all valid); `tests/test_readme_install_pin.py`
   refuses a Markdown file that pins this package to a git tag instead of
   `pip install web-search-helper`.
+- `GUI.md`: the `/gui` page, what it shows (two-pass search, excerpts or
+  refusal, extractive answer, written answer when the machine can bear it)
+  and what it deliberately leaves out.
 
 ## [0.2.0] — 2026-11-15
 

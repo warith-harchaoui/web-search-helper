@@ -208,7 +208,7 @@ helper and what should not, and a test keeps it identical to the skill's copy.
 
 The API also ships as a container (`Dockerfile`, `docker-compose.yml`): it
 reads the indexes from `./search-data`, mounted read-only, and serves port
-8040 with a `/health` probe.
+8040 with a `/health` probe. [`GUI.md`](https://github.com/warith-harchaoui/web-search-helper/blob/main/GUI.md) describes the `/gui` page.
 
 ```bash
 docker compose up --build      # http://localhost:8040/gui?lang=fr

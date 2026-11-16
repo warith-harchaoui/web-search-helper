@@ -217,7 +217,7 @@ copie de la compétence.
 
 L'API existe aussi en conteneur (`Dockerfile`, `docker-compose.yml`) : elle
 lit les index dans `./search-data`, monté en lecture seule, puis sert le port
-8040 avec une sonde `/health`.
+8040 avec une sonde `/health`. [`GUI.md`](https://github.com/warith-harchaoui/web-search-helper/blob/main/GUI.md) décrit la page `/gui` (en anglais).
 
 ```bash
 docker compose up --build      # http://localhost:8040/gui?lang=fr
