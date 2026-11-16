@@ -1,0 +1,19 @@
+# Minimal local conda environment: pins Python + pip, then hands off entirely
+# to requirements.txt (the single source of truth for actual dependencies) so
+# this file never drifts out of sync with pip's view of the project.
+#
+# PHP is the one thing this environment does not bring: install it from the
+# system (see README.md, Installation) to run the parity tests and `serve`.
+#
+# Usage:
+#   conda env create -f environment.yaml
+#   conda activate web-search-helper
+#   pip install -e .            # or pip install -e ".[embed,api,mcp,dev]"
+name: web-search-helper
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - -r requirements.txt

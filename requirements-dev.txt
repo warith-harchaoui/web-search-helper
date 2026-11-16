@@ -1,0 +1,10 @@
+# web-search-helper: dev + test requirements.
+#
+# Derived from pyproject.toml's extras, the single source of truth CI actually
+# installs from (`pip install -e ".[dev,api,mcp]"`). Kept only for
+# contributors who prefer `pip install -r requirements-dev.txt`; edit the
+# extras in pyproject.toml, not this file, to change what installs.
+#
+# The parity and server tests also need `php` (>= 7.4, with mbstring) on the
+# PATH; pip cannot install it.
+-e .[dev,api,mcp]

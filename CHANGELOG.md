@@ -13,6 +13,10 @@ file. Nothing changes in the search itself: `search.php`, `engine.py` and
   do the logs (`osh.info`, `osh.warning`, `osh.error`). The bench's warnings
   still reach stderr by default; the new info lines stay silent unless
   `osh.verbosity(1)` asks for them.
+- `requirements.txt` (the core dependencies, mirrored from `pyproject.toml`
+  and checked by `tests/test_requirements_mirror_pyproject.py`),
+  `requirements-dev.txt`, `environment.yaml`, and in `assets/` the Poetry
+  helpers `requirements_to_toml.py` and `manual_poetry.sh`.
 
 ## [0.2.0] — 2026-11-15
 

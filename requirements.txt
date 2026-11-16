@@ -1,0 +1,23 @@
+# web-search-helper: pip requirements (portable, no `file://` deps).
+#
+# For a plain install:
+#     pip install -r requirements.txt
+#     pip install -e .           # web-search-helper itself (editable) or `pip install .`
+#
+# These are the core dependencies only, enough to build an index with the
+# `hash` dry-run embedder, run the CLI and export the PHP endpoint. Optional
+# surfaces live behind extras (not pulled by this file):
+#     pip install '.[embed]'     # sentence-transformers, the real embedder (pulls torch)
+#     pip install '.[api]'       # FastAPI HTTP surface + /gui (web_search_helper.api)
+#     pip install '.[api,mcp]'   # + MCP server (web_search_helper.mcp_server)
+#     pip install '.[route]'     # ann-router's advice printed after `build`
+#
+# The server side needs none of this: PHP >= 7.4 with mbstring runs search.php.
+# This file mirrors pyproject.toml's [project] dependencies exactly;
+# tests/test_requirements_mirror_pyproject.py fails when they drift.
+
+# --- Suite dependency -----------------------------------------------------
+os-helper>=4.2,<5
+# --- Core runtime ---------------------------------------------------------
+click>=8.1,<9
+numpy>=1.24
