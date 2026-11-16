@@ -38,6 +38,12 @@ file. Nothing changes in the search itself: `search.php`, `engine.py` and
   browser and the leak check after upload; both are named now, and in the
   trigger catalogue. `skills/README.md` (installing the skill) and
   `references/surfaces.md` (library, website files, HTTP API, MCP, `/gui`).
+- Two more guards from audio-helper: `tests/test_doc_commands.py` parses every
+  `web-search-helper <sub>` line in the fenced blocks of the READMEs, the
+  examples, `GUI.md`, `CONTRIBUTING.md` and the skill against the click
+  definitions (40 lines, all valid); `tests/test_readme_install_pin.py`
+  refuses a Markdown file that pins this package to a git tag instead of
+  `pip install web-search-helper`.
 
 ## [0.2.0] — 2026-11-15
 
