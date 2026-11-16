@@ -9,7 +9,8 @@ exposes exactly those as MCP tools, so a route renamed here renames its tool.
   page's ``web-search.js`` can point at it; ``/gui`` does exactly that.
 - ``POST /search`` takes a plain question and embeds it server-side, for
   callers without a browser model.
-- ``GET /indexes`` lists the indexes served; ``POST /calibrate`` measures
+- ``GET /health`` answers without reading anything (the container's probe);
+  ``GET /indexes`` lists the indexes served; ``POST /calibrate`` measures
   thresholds (never writes); ``POST /check-online`` audits a deployed site.
 
 Indexes are read from ``WSH_DATA_DIR`` (default ``./search-data``), one
@@ -115,6 +116,11 @@ def create_app() -> FastAPI:
         version=__version__,
     )
 
+    @app.get("/health", operation_id="health")
+    def health() -> dict:
+        """Liveness probe (the container's healthcheck): answers without reading an index."""
+        return {"status": "ok", "version": __version__}
+
     @app.get("/indexes", operation_id="indexes")
     def indexes() -> list[dict]:
         """The indexes served: language, model, size and thresholds."""
@@ -180,16 +186,37 @@ def create_app() -> FastAPI:
     def client() -> FileResponse:
         return FileResponse(asset("web-search.js"), media_type="text/javascript")
 
+    @app.get("/writer-plan.json", include_in_schema=False)
+    def writer_plan() -> FileResponse:
+        """The written-answer ladder, which web-search.js fetches next to itself."""
+        return FileResponse(asset("writer-plan.json"), media_type="application/json")
+
     return app
 
 
 app = create_app()
 
 
-def main() -> None:  # pragma: no cover
-    import uvicorn
+def main(argv: list[str] | None = None) -> None:
+    """Console entry point (``web-search-helper-api``): serve the HTTP API and ``/gui``.
 
-    uvicorn.run(app, host="127.0.0.1", port=int(os.environ.get("PORT", "8040")))
+    A click command, so ``--help`` answers instead of starting the server.
+    Loopback by default; ``--host 0.0.0.0`` (or ``WSH_HOST``) for a container.
+    The port also reads ``PORT``, as it did before the options existed.
+    """
+    import click
+
+    @click.command(context_settings={"help_option_names": ["-h", "--help"]})
+    @click.option("--host", envvar="WSH_HOST", default="127.0.0.1", show_default=True)
+    @click.option("--port", envvar=["WSH_PORT", "PORT"], default=8040, type=int, show_default=True)
+    def serve(host: str, port: int) -> None:
+        """Serve the web-search-helper HTTP API, with its page at /gui."""
+        import uvicorn
+
+        click.echo(f"web-search-helper API -> http://{host}:{port}/docs  (page at /gui)")
+        uvicorn.run(app, host=host, port=port)
+
+    serve.main(args=argv, prog_name="web-search-helper-api")
 
 
 if __name__ == "__main__":  # pragma: no cover

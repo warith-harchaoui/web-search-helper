@@ -48,6 +48,13 @@ def test_gui_points_at_query(client):
     html = client.get("/gui").text
     assert "endpoint: 'query'" in html and "search.php" not in html
     assert "export class WebSearch" in client.get("/web-search.js").text
+    # mount(..., { writer: true }) fetches the plan next to web-search.js;
+    # without this route the page's written answer could never be offered.
+    assert client.get("/writer-plan.json").json()["usage"] == "rag-answer"
+
+
+def test_health(client):
+    assert client.get("/health").json()["status"] == "ok"
 
 
 def test_mcp_tools():

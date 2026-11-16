@@ -20,6 +20,14 @@ file. Nothing changes in the search itself: `search.php`, `engine.py` and
 - `CODING.md` (the suite's coding standard) and `CONTRIBUTING.md`, which
   states the parity rule: a change to ranking, verdict, excerpts or tokenizer
   lands in `engine.py` and `search.php` in the same commit.
+- Fix: `web-search-helper-api --help` and `web-search-helper-mcp --help`
+  started a server and never returned. Both are click commands now, with
+  `--host` and `--port` (also `WSH_HOST`, `WSH_PORT`; `PORT` still works);
+  `tests/test_every_command_answers_help.py` runs every console script with
+  `--help` under a timeout.
+- Fix: `/gui` never offered the written answer, because the API did not
+  serve the `writer-plan.json` that `web-search.js` fetches next to itself.
+  It does now, and the API gains `GET /health` (not an MCP tool).
 
 ## [0.2.0] — 2026-11-15
 

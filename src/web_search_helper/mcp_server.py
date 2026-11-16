@@ -16,7 +16,6 @@ Author: Warith Harchaoui <warithmetics@deraison.ai>
 
 from __future__ import annotations
 
-import os
 
 try:
     from fastapi_mcp import FastApiMCP
@@ -43,10 +42,25 @@ app = create_app()
 build_server(app)
 
 
-def main() -> None:  # pragma: no cover
-    import uvicorn
+def main(argv: list[str] | None = None) -> None:
+    """Console entry point (``web-search-helper-mcp``): the API with MCP at ``/mcp``.
 
-    uvicorn.run(app, host="127.0.0.1", port=int(os.environ.get("PORT", "8041")))
+    A click command, so ``--help`` answers instead of starting the server.
+    The port also reads ``PORT``, as it did before the options existed.
+    """
+    import click
+
+    @click.command(context_settings={"help_option_names": ["-h", "--help"]})
+    @click.option("--host", envvar="WSH_HOST", default="127.0.0.1", show_default=True)
+    @click.option("--port", envvar=["WSH_PORT", "PORT"], default=8041, type=int, show_default=True)
+    def serve(host: str, port: int) -> None:
+        """Serve the web-search-helper API with its MCP endpoint at /mcp."""
+        import uvicorn
+
+        click.echo(f"web-search-helper MCP -> http://{host}:{port}/mcp")
+        uvicorn.run(app, host=host, port=port)
+
+    serve.main(args=argv, prog_name="web-search-helper-mcp")
 
 
 if __name__ == "__main__":  # pragma: no cover
