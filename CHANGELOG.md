@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Every command line ends its `--help` on one line, after a blank one: `⭐️ on GitHub: https://github.com/warith-harchaoui/web-search-helper`. A test checks it for each console script. README.md and LISEZMOI.md carry one invitation to star the repository, right after the paragraph that says what the tool does.
+
 ## [0.3.0] — 2026-11-16
 
 The repository follows the suite's reference member (audio-helper) file for

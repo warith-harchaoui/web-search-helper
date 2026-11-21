@@ -13,6 +13,8 @@ embeds each question in the browser. The corpus is never published: a visitor
 receives a few sentences of what answers the question, or an honest "I cannot
 answer" and nothing else.
 
+Drop a [⭐️](https://github.com/warith-harchaoui/web-search-helper) on GitHub if my help deserves it.
+
 `web-search-helper` belongs to the [**AI Helpers**](https://github.com/warith-harchaoui/ai-helpers)
 suite. It works in French and in English out of the box (stopwords, answer
 composition, interface), one index per language, and in any other language

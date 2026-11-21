@@ -26,7 +26,10 @@ def _lines(path: str) -> list[str]:
     ]
 
 
-@click.group(context_settings={"help_option_names": ["-h", "--help"]})
+@click.group(
+    context_settings={"help_option_names": ["-h", "--help"]},
+    epilog="⭐️ on GitHub: https://github.com/warith-harchaoui/web-search-helper",
+)
 @click.version_option(__version__, "-V", "--version")
 def main():
     """Search a private corpus from a website: index here, PHP there."""

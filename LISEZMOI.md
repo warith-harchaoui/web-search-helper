@@ -13,6 +13,8 @@ page calcule le vecteur de chaque question dans le navigateur. Le corpus n'est
 jamais publié : le visiteur reçoit quelques phrases de ce qui répond ou un
 « Je ne sais pas répondre » honnête, rien d'autre.
 
+Laissez une [⭐️](https://github.com/warith-harchaoui/web-search-helper) sur GitHub si mon aide le mérite.
+
 `web-search-helper` fait partie de la suite [**AI Helpers**](https://github.com/warith-harchaoui/ai-helpers).
 Il fonctionne d'emblée en français comme en anglais (mots vides, composition
 de la réponse, interface), avec un index par langue ; toute autre langue
