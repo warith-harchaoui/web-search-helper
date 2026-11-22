@@ -5,7 +5,11 @@
    Nazi slogans), matched as whole words after folding, digit-for-letter
    substitutions undone and stretched letters shortened. A subject is never
    on the list: a reader may ask what the corpus says about racism or
-   deepfake pornography, and the screen must let that through.
+   deepfake pornography, and the screen must let that through. Then the
+   **rules**, a rudimentary judge that runs wherever PHP runs: a target and a
+   stance in the same question (a group and a degrading predicate, a request
+   and sexual content, "how to make" and a weapon), unless the question
+   frames it critically ("bias", "racism", "stereotype").
 2. **The judge**, a language model asked one question: is this question
    acceptable at all? It settles what no list can, a prejudice stated in
    polite words, or a slur dressed as a question about the corpus. It runs
@@ -54,7 +58,42 @@ def default_moderation(lang: str) -> dict:
     )
     terms = sorted({t for k in langs for t in data[k]["terms"]})
     phrases = sorted({p for k in langs for p in data[k]["phrases"]})
-    return {"terms": terms, "phrases": phrases, "judge": dict(data["judge"])}
+    rules = [compile_rule(r) for k in langs for r in data[k].get("rules", [])]
+    return {"terms": terms, "phrases": phrases, "rules": rules, "judge": dict(data["judge"])}
+
+
+def _group(alternatives: list[str]) -> str:
+    """One regular expression for a group, the same in Python and in PCRE.
+
+    The line it runs on is the question's words joined by single spaces, so a
+    word is ``[^ ]*`` and a word boundary is a space or an end of the line.
+    """
+    alts = []
+    for a in alternatives:
+        toks = [re.escape(t[:-1]) + "[^ ]*" if t.endswith("*") else re.escape(t) for t in a.split()]
+        alts.append(" ".join(toks))
+    return "(?:^| )(?:" + "|".join(alts) + ")(?= |$)"
+
+
+def compile_rule(rule: dict) -> dict:
+    """A rule of moderation.json as the index carries it: one expression per group.
+
+    >>> r = compile_rule({"name": "x", "all": [["juif*"], ["controlent"]], "none": [["biais"]]})
+    >>> rule_hits(r, "les juifs controlent la finance"), rule_hits(r, "biais les juifs controlent")
+    (True, False)
+    """
+    if "all" in rule and rule["all"] and isinstance(rule["all"][0], str):
+        return rule  # already compiled
+    return {
+        "name": rule["name"],
+        "all": [_group(g) for g in rule["all"]],
+        "none": [_group(g) for g in rule.get("none", [])],
+    }
+
+
+def rule_hits(rule: dict, line: str) -> bool:
+    """Every ``all`` group present in ``line``, and no ``none`` group."""
+    return all(re.search(g, line) for g in rule["all"]) and not any(re.search(g, line) for g in rule["none"])
 
 
 def words(q: str) -> list[str]:
@@ -71,7 +110,7 @@ def words(q: str) -> list[str]:
 
 def screen(q: str, mod: dict | None) -> bool:
     """True when ``q`` contains a listed word or phrase."""
-    if not mod or not (mod.get("terms") or mod.get("phrases")):
+    if not mod or not (mod.get("terms") or mod.get("phrases") or mod.get("rules")):
         return False
     terms = set(mod.get("terms", []))
     ws = words(q)
@@ -81,7 +120,9 @@ def screen(q: str, mod: dict | None) -> bool:
         return True
     line = " " + " ".join(_RUN3.sub(r"\1", w) for w in ws) + " "
     plain = " " + " ".join(ws) + " "
-    return any(f" {p} " in line or f" {p} " in plain for p in mod.get("phrases", []))
+    if any(f" {p} " in line or f" {p} " in plain for p in mod.get("phrases", [])):
+        return True
+    return any(rule_hits(r, " ".join(ws)) for r in mod.get("rules", []))
 
 
 # ------------------------------------------------------------- judge --

@@ -123,6 +123,19 @@ answer that".
    "about deepfake pornography" goes through. The list lives in
    `assets/moderation.json`; `build(..., moderation={...})` replaces it,
    `moderation=False` empties it.
+
+   The same file holds **rules**, a rudimentary judge that needs nothing but
+   PHP: a question is refused when a target and a stance meet in it (a group
+   of people and a degrading predicate, a request and sexual content, "how to
+   make" and a weapon or drug, the Holocaust and "hoax", Hitler and "was
+   right", someone and "deserved to be killed"), unless it frames them
+   critically ("bias", "stereotype", "racism", "theory"). Measured: 40 of 40
+   on the labelled questions they were written from, 50 of 50 on fresh ones,
+   and not one of the 55,000 sentences of the book this engine was first built
+   for refused. A visitor who rephrases with words outside the lists goes
+   through: that is what the LLM judge is for. (A judge from the question's
+   embedding was tried first and dropped: MiniLM vectors carry the subject,
+   not the stance, and a nearest-neighbour vote erred on half the questions.)
 2. **The LLM judge**, which settles what no list can: a prejudice put as a
    polite question, a slur dressed as a question about the corpus. On the
    server it runs when `search-data/judge.php` exists:

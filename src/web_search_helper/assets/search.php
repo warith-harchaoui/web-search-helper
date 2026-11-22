@@ -437,7 +437,8 @@ function wsh_search(&$I, $q, $qv, $judge = null) {
 // ------------------------------------------------------- moderation --
 // Twin of web_search_helper/moderation.py. An unacceptable question is refused
 // before any search: by the screen (the index's list of words abusive in every
-// context), then, when judge.php configures one, by a language model.
+// context, then its rules, a rudimentary judge of target and stance), then,
+// when judge.php configures one, by a language model.
 
 function wsh_words($q) {
     static $leet = ['0' => 'o', '1' => 'i', '3' => 'e', '4' => 'a', '5' => 's', '7' => 't', '@' => 'a', '$' => 's'];
@@ -445,7 +446,7 @@ function wsh_words($q) {
 }
 
 function wsh_screen($q, $mod) {
-    if (!is_array($mod) || (empty($mod['terms']) && empty($mod['phrases']))) return false;
+    if (!is_array($mod) || (empty($mod['terms']) && empty($mod['phrases']) && empty($mod['rules']))) return false;
     $terms = array_fill_keys(isset($mod['terms']) ? $mod['terms'] : [], true);
     $ws = wsh_words($q);
     $short = [];
@@ -459,6 +460,17 @@ function wsh_screen($q, $mod) {
     $plain = ' ' . implode(' ', $ws) . ' ';
     foreach (isset($mod['phrases']) ? $mod['phrases'] : [] as $p) {
         if (strpos($line, " $p ") !== false || strpos($plain, " $p ") !== false) return true;
+    }
+    // The rules: a target and a stance in the same question, unless it frames
+    // them critically. Their expressions were compiled at build time, the same
+    // for Python's re and PCRE.
+    $words = implode(' ', $ws);
+    foreach (isset($mod['rules']) ? $mod['rules'] : [] as $r) {
+        $hit = true;
+        foreach ($r['all'] as $g) if (!preg_match('~' . $g . '~u', $words)) { $hit = false; break; }
+        if (!$hit) continue;
+        foreach ($r['none'] as $g) if (preg_match('~' . $g . '~u', $words)) { $hit = false; break; }
+        if ($hit) return true;
     }
     return false;
 }

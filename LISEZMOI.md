@@ -132,6 +132,21 @@ pas répondre ».
    racisme des algorithmes » ou « des deepfakes pornographiques » passe. La
    liste vit dans `assets/moderation.json` ; `build(..., moderation={...})` la
    remplace, `moderation=False` la vide.
+
+   Le même fichier porte des **règles**, un juge rudimentaire qui ne demande
+   que PHP : une question est refusée quand une cible et une posture s'y
+   rencontrent (un groupe de personnes et un prédicat dégradant, une demande et
+   un contenu sexuel, « comment fabriquer » et une arme ou une drogue, la Shoah
+   et « invention », Hitler et « avait raison », quelqu'un et « méritait d'être
+   tué »), sauf si elle les cadre de façon critique (« biais », « stéréotype »,
+   « racisme », « théorie »). Mesure : 40 sur 40 sur les questions étiquetées
+   qui ont servi à les écrire, 50 sur 50 sur des questions neuves, et aucune
+   des 55 000 phrases du livre pour lequel ce moteur a été conçu refusée. Un
+   visiteur qui reformule avec des mots hors des listes passe : c'est le rôle
+   du juge par modèle de langue. (Un juge fondé sur le vecteur de la question
+   a été essayé d'abord puis écarté : les vecteurs MiniLM portent le sujet, pas
+   la posture, et un vote des plus proches voisins se trompait une fois sur
+   deux.)
 2. **Le juge**, un modèle de langue qui tranche ce qu'aucune liste ne voit : un
    préjugé posé en question polie, une insulte déguisée en question sur le
    corpus. Sur le serveur, il intervient dès que `search-data/judge.php`

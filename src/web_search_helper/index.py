@@ -44,7 +44,7 @@ import os_helper as osh
 
 from .corpus import Passage
 from .embed import Embedder, window_texts
-from .moderation import default_moderation
+from .moderation import compile_rule, default_moderation
 from .text import stopwords as default_stopwords
 from .text import tokenize
 
@@ -227,9 +227,11 @@ def from_vectors(
 def _moderation(lang: str, given: dict | bool | None) -> dict:
     mod = default_moderation(lang)
     if given is False:
-        return {**mod, "terms": [], "phrases": []}
+        return {**mod, "terms": [], "phrases": [], "rules": []}
     if isinstance(given, dict):
-        return {**mod, **given}
+        out = {**mod, **given}
+        out["rules"] = [compile_rule(r) for r in out.get("rules", [])]
+        return out
     return mod
 
 
