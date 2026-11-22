@@ -13,6 +13,9 @@ exposes exactly those as MCP tools, so a route renamed here renames its tool.
   ``GET /indexes`` lists the indexes served; ``POST /calibrate`` measures
   thresholds (never writes); ``POST /check-online`` audits a deployed site.
 
+Questions are screened like ``search.php`` screens them; an LLM judge joins
+when ``WSH_JUDGE_URL`` is set (see :mod:`web_search_helper.moderation`).
+
 Indexes are read from ``WSH_DATA_DIR`` (default ``./search-data``), one
 ``<lang>.php`` per language, as ``search.php`` reads them.
 
@@ -47,6 +50,7 @@ from . import __version__
 from .calibrate import calibrate as run_calibrate
 from .engine import search as run_search
 from .index import Index, load
+from .moderation import judge_config
 from .site import asset
 from .site import check_online as run_check_online
 
@@ -156,14 +160,14 @@ def create_app() -> FastAPI:
             if not n:
                 raise HTTPException(400, "v")
             qv = (qv / n).astype(np.float32)
-        return run_search(idx, body.q, qv)
+        return run_search(idx, body.q, qv, judge=judge_config())
 
     @app.post("/search", operation_id="search")
     def search(body: SearchRequest) -> dict:
         """Ask a question in plain text; the server embeds it."""
         idx = get_index(body.lang)
         qv = None if body.words_only else embedder_for(idx).encode([body.question])[0]
-        return run_search(idx, body.question, qv, explain=body.explain)
+        return run_search(idx, body.question, qv, explain=body.explain, judge=judge_config())
 
     @app.post("/calibrate", operation_id="calibrate")
     def calibrate(body: CalibrateRequest) -> dict:

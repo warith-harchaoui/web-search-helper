@@ -15,7 +15,12 @@
 // POST JSON {"lang": "fr", "q": "...", "v": [384 floats]?}
 //   -> {"sure": false, "terms": [...]}
 //   -> {"sure": true, "terms": [...], "hits": [{doc, section, url, meta, text, o, cos, before, after}]}
+//   -> {"sure": false, "refused": "moderation" | "judge", "terms": []}   (unacceptable question)
 // Errors: 400 bad request, 405 not POST, 429 too many requests, 500 index.
+//
+// Moderation: the index carries a screen of words abusive in every context; a
+// language model judges the rest when WSH_DATA_DIR/judge.php configures one
+// (see wsh_judge_config). Both refuse before any search.
 //
 // Configuration: the index files live in WSH_DATA_DIR (default: ./search-data),
 // one per language, named <lang>.php. Both can be set by defining the
@@ -412,8 +417,10 @@ function wsh_excerpt($i, $qv, $terms, &$I) {
     ];
 }
 
-function wsh_search(&$I, $q, $qv) {
+function wsh_search(&$I, $q, $qv, $judge = null) {
     $q = trim($q);
+    $why = wsh_refused($q, $I, $judge);
+    if ($why !== null) return ['sure' => false, 'refused' => $why, 'terms' => []];
     $kw = wsh_lexical($q, $I);
     $sem = $qv !== null ? wsh_semantic($qv, $I) : null;
     $sure = wsh_sure($kw, $sem, $I['meta']['thresholds']);
@@ -427,18 +434,130 @@ function wsh_search(&$I, $q, $qv) {
     return $out;
 }
 
-// ----------------------------------------------------------- quota --
-// Only a salted hash of the address and the times of its calls of the last
-// day are kept; nothing else.
-function wsh_quota($limits) {
+// ------------------------------------------------------- moderation --
+// Twin of web_search_helper/moderation.py. An unacceptable question is refused
+// before any search: by the screen (the index's list of words abusive in every
+// context), then, when judge.php configures one, by a language model.
+
+function wsh_words($q) {
+    static $leet = ['0' => 'o', '1' => 'i', '3' => 'e', '4' => 'a', '5' => 's', '7' => 't', '@' => 'a', '$' => 's'];
+    return preg_split('/[^\p{L}\p{N}]+/u', strtr(wsh_fold($q), $leet), -1, PREG_SPLIT_NO_EMPTY);
+}
+
+function wsh_screen($q, $mod) {
+    if (!is_array($mod) || (empty($mod['terms']) && empty($mod['phrases']))) return false;
+    $terms = array_fill_keys(isset($mod['terms']) ? $mod['terms'] : [], true);
+    $ws = wsh_words($q);
+    $short = [];
+    foreach ($ws as $w) {
+        // A stretched letter ("pédééé") is read with the run cut to two, then to one.
+        $one = preg_replace('/(.)\1{2,}/u', '$1', $w);
+        if (isset($terms[$w]) || isset($terms[preg_replace('/(.)\1{2,}/u', '$1$1', $w)]) || isset($terms[$one])) return true;
+        $short[] = $one;
+    }
+    $line = ' ' . implode(' ', $short) . ' ';
+    $plain = ' ' . implode(' ', $ws) . ' ';
+    foreach (isset($mod['phrases']) ? $mod['phrases'] : [] as $p) {
+        if (strpos($line, " $p ") !== false || strpos($plain, " $p ") !== false) return true;
+    }
+    return false;
+}
+
+// The judge, configured by a PHP file that returns an array (so that, requested
+// by URL, it shows nothing): WSH_DATA_DIR/judge.php unless WSH_JUDGE_CONFIG says
+// otherwise.
+//   return ['url' => 'https://…/v1/chat/completions', 'model' => '…',
+//           'key' => '…', 'timeout' => 8, 'fail' => 'open'];
+// 'url' is any OpenAI-compatible chat completions endpoint. 'fail' => 'closed'
+// refuses the question when the judge does not answer; 'open' lets it through.
+function wsh_judge_config() {
+    $f = defined('WSH_JUDGE_CONFIG') ? WSH_JUDGE_CONFIG : WSH_DATA_DIR . '/judge.php';
+    if (!is_file($f)) return null;
+    $c = include $f;
+    return is_array($c) && !empty($c['url']) ? $c : null;
+}
+
+function wsh_parse_verdict($t) {
+    $t = strtoupper(preg_replace('/<think>.*?<\/think>/s', '', (string)$t));
+    $b = strrpos($t, 'BLOCK');
+    $a = strrpos($t, 'ALLOW');
+    if ($b === false && $a === false) return null;
+    if ($a === false) return 'block';
+    if ($b === false) return 'allow';
+    return $b > $a ? 'block' : 'allow';
+}
+
+function wsh_salt() {
     $dir = WSH_STATE_DIR;
-    if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) return true;
+    if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) return null;
     $saltFile = $dir . '/salt';
     $salt = @file_get_contents($saltFile);
     if (!$salt) {
         $salt = bin2hex(random_bytes(16));
         @file_put_contents($saltFile, $salt, LOCK_EX);
     }
+    return $salt;
+}
+
+function wsh_post_json($url, $body, $key, $timeout) {
+    $payload = json_encode($body, JSON_UNESCAPED_UNICODE);
+    $headers = ['Content-Type: application/json'];
+    if ($key) $headers[] = 'Authorization: Bearer ' . $key;
+    if (function_exists('curl_init')) {
+        $h = curl_init($url);
+        curl_setopt_array($h, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $payload, CURLOPT_HTTPHEADER => $headers,
+                               CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout,
+                               CURLOPT_CONNECTTIMEOUT => $timeout]);
+        $raw = curl_exec($h);
+        $code = curl_getinfo($h, CURLINFO_HTTP_CODE);
+        return ($raw === false || $code < 200 || $code >= 300) ? null : $raw;
+    }
+    $ctx = stream_context_create(['http' => ['method' => 'POST', 'header' => implode("\r\n", $headers),
+                                             'content' => $payload, 'timeout' => $timeout]]);
+    $raw = @file_get_contents($url, false, $ctx);
+    return $raw === false ? null : $raw;
+}
+
+// 'allow', 'block', or null when the judge did not answer. A verdict is kept a
+// day under a salted hash of the question, so that the second call of a page
+// (words, then words and meaning) never asks twice.
+function wsh_judge($q, $c, $prompt) {
+    $model = isset($c['model']) ? $c['model'] : '';
+    $salt = wsh_salt();
+    $cache = $salt === null ? null : WSH_STATE_DIR . '/judge-' . hash('sha256', $salt . "\n" . $model . "\n" . $q);
+    if ($cache !== null && is_file($cache) && filemtime($cache) > time() - 86400) {
+        $v = trim((string)@file_get_contents($cache));
+        if ($v === 'allow' || $v === 'block') return $v;
+    }
+    $body = ['model' => $model, 'temperature' => 0, 'max_tokens' => 400,
+             'messages' => [['role' => 'system', 'content' => $prompt['system']],
+                            ['role' => 'user', 'content' => str_replace('{q}', $q, $prompt['user'])]]];
+    $raw = wsh_post_json($c['url'], $body, isset($c['key']) ? $c['key'] : '',
+                         isset($c['timeout']) ? (int)$c['timeout'] : 8);
+    $r = $raw === null ? null : json_decode($raw, true);
+    $v = isset($r['choices'][0]['message']['content'])
+        ? wsh_parse_verdict($r['choices'][0]['message']['content']) : null;
+    if ($v !== null && $cache !== null) @file_put_contents($cache, $v, LOCK_EX);
+    return $v;
+}
+
+function wsh_refused($q, &$I, $judge) {
+    $mod = isset($I['meta']['moderation']) ? $I['meta']['moderation'] : null;
+    if (wsh_screen($q, $mod)) return 'moderation';
+    if ($judge && isset($mod['judge'])) {
+        $v = wsh_judge($q, $judge, $mod['judge']);
+        if ($v === 'block' || ($v === null && isset($judge['fail']) && $judge['fail'] === 'closed')) return 'judge';
+    }
+    return null;
+}
+
+// ----------------------------------------------------------- quota --
+// Only a salted hash of the address and the times of its calls of the last
+// day are kept; nothing else.
+function wsh_quota($limits) {
+    $dir = WSH_STATE_DIR;
+    $salt = wsh_salt();
+    if ($salt === null) return true;
     $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
     $f = @fopen($dir . '/' . hash('sha256', $salt . $ip), 'c+');
     if (!$f) return true;
@@ -498,7 +617,7 @@ function wsh_main() {
         foreach ($qv as $d => $x) $qv[$d] = $x * $inv;
     }
     if (!wsh_quota($I['meta']['limits'])) wsh_reply(429, ['error' => 'too many requests']);
-    wsh_reply(200, wsh_search($I, $q, $qv));
+    wsh_reply(200, wsh_search($I, $q, $qv, wsh_judge_config()));
 }
 
 // Included by a test harness or a wrapper that defines WSH_NO_MAIN: only the

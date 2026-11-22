@@ -3,7 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { chooseRung, probeDevice, measureBandwidth, checkGrounding, splitSentences } from '../../src/web_search_helper/assets/web-search.js';
+import { chooseRung, probeDevice, measureBandwidth, checkGrounding, splitSentences,
+         JUDGE_PROMPT, parseVerdict, Writer, WebSearch } from '../../src/web_search_helper/assets/web-search.js';
 
 const here = new URL('.', import.meta.url);
 const plan = JSON.parse(readFileSync(new URL('../../src/web_search_helper/assets/writer-plan.json', here)));
@@ -93,4 +94,49 @@ test('invented sentences, bad citations and uncited answers are not', () => {
 
 test('sentences split on strong punctuation', () => {
   assert.deepEqual(splitSentences('Une phrase. Une autre ! Et M. Dupont dit oui.'), ['Une phrase.', 'Une autre !', 'Et M. Dupont dit oui.']);
+});
+
+// ---------------------------------------------------------- the judge --
+
+test('the judge prompt is the twin of moderation.json', () => {
+  const mod = JSON.parse(readFileSync(new URL('../../src/web_search_helper/assets/moderation.json', here)));
+  assert.deepEqual(JUDGE_PROMPT, mod.judge);
+});
+
+test('verdicts parse like moderation.parse_verdict', () => {
+  assert.equal(parseVerdict('BLOCK'), 'block');
+  assert.equal(parseVerdict(' allow.'), 'allow');
+  assert.equal(parseVerdict('<think>ALLOW? no</think>\nBLOCK'), 'block');
+  assert.equal(parseVerdict('?'), null);
+});
+
+const fakeWriter = (reply) => {
+  const w = new Writer({ model: 'm', dtype: 'q4', bytes: 1, files: [] });
+  const asked = [];
+  w._generate = async (messages) => { asked.push(messages); return typeof reply === 'function' ? reply(messages) : reply; };
+  return { w, asked };
+};
+const sureResult = { sure: true, terms: ['x'], hits: [{ doc: 'D', section: 'S', text: 'Un éléphant dans la pièce.' }] };
+
+test('a blocked question gets no written answer, and the writer is never asked', async () => {
+  const { w, asked } = fakeWriter('BLOCK');
+  const r = await w.write(sureResult, { question: 'q', lang: 'fr' });
+  assert.equal(r.refused, 'judge'); assert.equal(r.text, ''); assert.equal(asked.length, 1);
+  assert.equal(asked[0][0].content, JUDGE_PROMPT.system);
+});
+
+test('an allowed question is written; an unreadable verdict blocks', async () => {
+  const { w, asked } = fakeWriter((m) => (m[0].content === JUDGE_PROMPT.system ? 'ALLOW' : 'Un éléphant [1].'));
+  const r = await w.write(sureResult, { question: 'q', lang: 'fr' });
+  assert.equal(r.refused, undefined); assert.equal(asked.length, 2); assert.equal(r.text, 'Un éléphant [1].');
+  assert.equal(await fakeWriter('je ne sais pas').w.judge('q'), 'block');
+});
+
+test('a refused search is final: no embedding, no second call', async () => {
+  const ws = new WebSearch({ endpoint: 'x', lang: 'fr' });
+  let calls = 0;
+  ws.query = async () => { calls++; return { sure: false, refused: 'moderation', terms: [] }; };
+  ws.embed = async () => { throw new Error('must not embed'); };
+  const r = await ws.ask('q', { onLexical: () => { throw new Error('must not paint'); } });
+  assert.equal(r.refused, 'moderation'); assert.equal(calls, 1);
 });

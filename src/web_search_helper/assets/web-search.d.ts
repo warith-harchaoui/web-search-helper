@@ -22,6 +22,8 @@ export interface SearchResult {
   /** The words actually searched (typos replaced by their neighbours). */
   terms: string[];
   hits?: Hit[];
+  /** Set when the question was refused before any search: by the screen, or by the server's LLM judge. */
+  refused?: 'moderation' | 'judge';
   /** Whether the meaning route took part (the model loaded). */
   semantic?: boolean;
   qv?: Float32Array;
@@ -107,7 +109,13 @@ export interface WrittenAnswer {
   grounded: boolean;
   unsupported: string[];
   excerpts: Hit[];
+  /** Set, with empty text, when the judge found the question unacceptable. */
+  refused?: 'judge';
 }
+
+/** The judge's prompt, twin of moderation.json's "judge". */
+export const JUDGE_PROMPT: { system: string; user: string };
+export function parseVerdict(text: string): 'allow' | 'block' | null;
 
 export class Writer {
   constructor(rung: Rung, o?: { transformersUrl?: string; onProgress?: (p: unknown) => void });
@@ -116,6 +124,8 @@ export class Writer {
   static create(plan: WriterPlan | string, o?: { transformersUrl?: string; onProgress?: (p: unknown) => void }):
     Promise<{ writer: Writer | null; reason: Reason; seconds: number | null; device: Device }>;
   load(): Promise<unknown>;
+  /** The LLM judge: is the question acceptable at all? A reply that says neither is 'block'. */
+  judge(question: string): Promise<'allow' | 'block'>;
   write(result: SearchResult, o: { question: string; lang: string; maxExcerpts?: number; maxNewTokens?: number;
                                    onText?: (text: string) => void }): Promise<WrittenAnswer | null>;
 }

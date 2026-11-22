@@ -4,6 +4,8 @@
 
 ### Added
 
+- Unacceptable questions are refused before any search, in two layers. The screen, always on and carried by the index (`meta["moderation"]`, from `assets/moderation.json`), lists words and phrases abusive in every context, never subjects. The LLM judge runs on the server when `search-data/judge.php` configures an OpenAI-compatible endpoint (verdicts cached a day under a salted hash, after the quota; `fail` open or closed), in the Python door through `WSH_JUDGE_*`, and in the browser, where the writer's model judges the question before writing (`Writer.judge`). The answer is `{"sure": false, "refused": "moderation" | "judge", "terms": []}`; `WebSearch.ask` stops there and `mount` says why. `moderation.py` is the Python twin; `tests/test_moderation.py` runs the screen and a fake judge through both twins. Indexes built before this version carry no screen: rebuild them.
+
 - Every command line ends its `--help` on one line, after a blank one: `⭐️ on GitHub: https://github.com/warith-harchaoui/web-search-helper`. A test checks it for each console script. README.md and LISEZMOI.md carry one invitation to star the repository, right after the paragraph that says what the tool does.
 
 ## [0.3.0] — 2026-11-16

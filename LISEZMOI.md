@@ -117,6 +117,51 @@ Un visiteur patient, avec des milliers de questions bien choisies, peut encore
 recueillir une bonne part du corpus. Ces mesures le ralentissent ; elles ne
 l'empêchent pas.
 
+## Questions inacceptables
+
+Deux couches refusent une question avant toute recherche, et la page le dit
+(`{"sure": false, "refused": "moderation" | "judge"}`) au lieu de « Je ne sais
+pas répondre ».
+
+1. **Le filtre**, toujours actif, porté par l'index : une courte liste de mots
+   et d'expressions injurieux dans tout contexte (insultes racistes,
+   antisémites ou homophobes, sites pornographiques, slogans nazis), en
+   français et en anglais, reconnus comme mots entiers après pliage des
+   accents, chiffres tapés pour des lettres rétablis, lettres étirées
+   raccourcies. Un sujet n'est jamais sur la liste : « que dit le corpus du
+   racisme des algorithmes » ou « des deepfakes pornographiques » passe. La
+   liste vit dans `assets/moderation.json` ; `build(..., moderation={...})` la
+   remplace, `moderation=False` la vide.
+2. **Le juge**, un modèle de langue qui tranche ce qu'aucune liste ne voit : un
+   préjugé posé en question polie, une insulte déguisée en question sur le
+   corpus. Sur le serveur, il intervient dès que `search-data/judge.php`
+   existe :
+
+   ```php
+   <?php return ['url' => 'https://api.mistral.ai/v1/chat/completions',
+                 'model' => 'mistral-small-latest', 'key' => '…',
+                 'timeout' => 8, 'fail' => 'open'];
+   ```
+
+   Tout point d'accès de chat compatible OpenAI convient. Le fichier est du
+   PHP : appelé par une URL, il ne montre rien, et le dossier de données
+   refuse de toute façon chaque requête. Le verdict est gardé un jour sous une
+   empreinte salée de la question, si bien que le second appel de la page ne
+   redemande jamais ; le plafond passe avant le juge, si bien qu'un visiteur
+   ne dépense pas vos crédits plus vite qu'il ne le permet. `'fail' =>
+   'closed'` refuse la question quand le juge ne répond pas. La porte Python
+   lit `WSH_JUDGE_URL`, `WSH_JUDGE_MODEL`, `WSH_JUDGE_KEY`,
+   `WSH_JUDGE_TIMEOUT` et `WSH_JUDGE_FAIL`.
+
+   Dans le navigateur, le modèle de rédaction juge lui-même la question avant
+   d'écrire (`Writer.judge`) ; une question refusée n'obtient aucune réponse
+   rédigée.
+
+Le juge envoie la question du visiteur, et rien d'autre, au fournisseur que
+vous configurez. Mesure avec le prompt livré sur 40 questions étiquetées (20 à
+refuser, 20 à laisser passer, en français et en anglais) : Gemma 3 12B via
+Ollama, aucune erreur, 2,6 s par question sur un portable Apple.
+
 ## Installation
 
 Deux machines, deux besoins. Là où vous indexez (votre ordinateur) : Python 3.10

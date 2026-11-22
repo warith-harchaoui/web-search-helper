@@ -27,6 +27,9 @@ QUESTIONS = {
         "audit des permissions",
         "le la les",  # stopwords only
         "Œuvre à Noël ÉLÉPHANT",
+        "la parabole de l'éléphant, sale négro",  # screened
+        "S4L3 JU1F et l'agent",  # screened, digits for letters
+        "Que dit le livre du racisme des agents ?",  # a subject, never screened
     ],
     "en": [
         "What is the parable of the elephant?",
@@ -38,6 +41,9 @@ QUESTIONS = {
         "audit of permissions",
         "the a of",  # stopwords only
         "Governing AGENTS’ permissions",
+        "the elephant parable, you faggot",  # screened
+        "Heil   Hitler and the data wall",  # screened phrase
+        "What does the book say about racism in agents?",  # a subject, never screened
     ],
 }
 
@@ -98,6 +104,7 @@ def test_same_answers(php_results, lang_index):
         ref = search(index, c["q"], qv)
         assert r["sure"] == ref["sure"], c["q"]
         assert r["terms"] == ref["terms"], c["q"]
+        assert r.get("refused") == ref.get("refused"), c["q"]
         if not ref["sure"]:
             assert "hits" not in r
             continue

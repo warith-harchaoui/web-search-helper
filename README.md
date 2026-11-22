@@ -109,6 +109,47 @@ when it goes over budget.
 Someone patient with thousands of well-chosen questions can still collect a
 good part of the corpus. These measures make that slow, not impossible.
 
+## Unacceptable questions
+
+Two layers refuse a question before any search, and the page says so
+(`{"sure": false, "refused": "moderation" | "judge"}`) instead of "I cannot
+answer that".
+
+1. **The screen**, always on, carried by the index: a short list of words and
+   phrases abusive in every context (slurs, pornographic sites, Nazi slogans),
+   in French and English, matched as whole words after folding, with digits
+   typed for letters undone and stretched letters shortened. A subject is
+   never on the list: "what does the corpus say about racist algorithms" or
+   "about deepfake pornography" goes through. The list lives in
+   `assets/moderation.json`; `build(..., moderation={...})` replaces it,
+   `moderation=False` empties it.
+2. **The LLM judge**, which settles what no list can: a prejudice put as a
+   polite question, a slur dressed as a question about the corpus. On the
+   server it runs when `search-data/judge.php` exists:
+
+   ```php
+   <?php return ['url' => 'https://api.mistral.ai/v1/chat/completions',
+                 'model' => 'mistral-small-latest', 'key' => '…',
+                 'timeout' => 8, 'fail' => 'open'];
+   ```
+
+   Any OpenAI-compatible chat endpoint works. The file is PHP, so requested by
+   URL it shows nothing, and the data folder denies every request anyway.
+   The verdict is kept a day under a salted hash of the question, so the
+   page's second call never asks twice; the quota runs before the judge, so a
+   visitor cannot spend your credits faster than it allows. `'fail' =>
+   'closed'` refuses the question when the judge does not answer. The Python
+   door reads `WSH_JUDGE_URL`, `WSH_JUDGE_MODEL`, `WSH_JUDGE_KEY`,
+   `WSH_JUDGE_TIMEOUT` and `WSH_JUDGE_FAIL`.
+
+   In the browser, the writer's own model judges the question before it
+   writes (`Writer.judge`); a blocked question gets no written answer.
+
+The judge sends the visitor's question, and nothing else, to the provider you
+configure. Measured with the shipped prompt on 40 labelled questions (20 to
+refuse, 20 to let through, French and English): Gemma 3 12B through Ollama,
+no error, 2.6 s a question on an Apple laptop.
+
 ## Installation
 
 Two machines, two needs. Where you index (your own computer): Python 3.10 or

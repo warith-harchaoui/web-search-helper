@@ -27,6 +27,7 @@ import unicodedata
 import numpy as np
 
 from .index import Index
+from .moderation import refused as _refused
 from .text import tokenize
 
 
@@ -262,9 +263,20 @@ def excerpt(i: int, qv: np.ndarray | None, terms: list[str], idx: Index) -> dict
     }
 
 
-def search(idx: Index, q: str, qv: np.ndarray | None = None, explain: bool = False) -> dict:
-    """What ``search.php`` answers to ``q`` (and the question vector ``qv``)."""
+def search(
+    idx: Index, q: str, qv: np.ndarray | None = None, explain: bool = False, judge: dict | None = None
+) -> dict:
+    """What ``search.php`` answers to ``q`` (and the question vector ``qv``).
+
+    An unacceptable question gets ``{"sure": False, "refused": why, "terms": []}``
+    before any search: ``"moderation"`` when the index's screen catches it,
+    ``"judge"`` when the model configured in ``judge`` (see
+    ``moderation.judge_config``) refuses it.
+    """
     q = q.strip()
+    why = _refused(q, idx.meta.get("moderation"), judge)
+    if why:
+        return {"sure": False, "refused": why, "terms": []}
     kw = lexical(q, idx)
     sem = semantic(qv, idx) if qv is not None else None
     sure = sure_enough(kw, sem, idx.meta["thresholds"])

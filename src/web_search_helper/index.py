@@ -44,6 +44,7 @@ import os_helper as osh
 
 from .corpus import Passage
 from .embed import Embedder, window_texts
+from .moderation import default_moderation
 from .text import stopwords as default_stopwords
 from .text import tokenize
 
@@ -104,6 +105,7 @@ def build(
     limits: dict | None = None,
     ranking: dict | None = None,
     batch: int = 256,
+    moderation: dict | bool | None = None,
 ) -> Index:
     """Cut, embed and index ``passages``."""
     if not passages:
@@ -128,6 +130,7 @@ def build(
         thresholds=thresholds,
         limits=limits,
         ranking=ranking,
+        moderation=moderation,
     )
 
 
@@ -140,6 +143,7 @@ def from_vectors(
     thresholds: dict | None = None,
     limits: dict | None = None,
     ranking: dict | None = None,
+    moderation: dict | bool | None = None,
 ) -> Index:
     """Index passages whose windows are already embedded, by another pipeline.
 
@@ -149,7 +153,9 @@ def from_vectors(
     offset of each window in ``t``) and optionally ``u`` (url) and ``m`` (meta
     passed to the browser); ``vectors`` holds one L2-normalised row per window,
     passages in order. ``model`` names the Python model and its transformers.js
-    twin, which the page must use for the question.
+    twin, which the page must use for the question. ``moderation`` replaces
+    the shipped screen and judge prompt (``moderation.default_moderation``);
+    ``False`` empties the screen's lists.
 
     >>> rows = [{"t": "Un éléphant.", "c": "D", "s": "S", "o": [12]}]
     >>> idx = from_vectors(rows, np.eye(1, 4, dtype=np.float32), "fr",
@@ -213,8 +219,18 @@ def from_vectors(
         "limits": {**DEFAULT_LIMITS, **(limits or {})},
         "ranking": {**DEFAULT_RANKING, **(ranking or {})},
         "avg_len": sum(lengths) / len(lengths),
+        "moderation": _moderation(lang, moderation),
     }
     return Index(meta, rows, section_of, vecs, cents, words, postings, lengths)
+
+
+def _moderation(lang: str, given: dict | bool | None) -> dict:
+    mod = default_moderation(lang)
+    if given is False:
+        return {**mod, "terms": [], "phrases": []}
+    if isinstance(given, dict):
+        return {**mod, **given}
+    return mod
 
 
 def vectors_from_int8(data: bytes, dim: int) -> np.ndarray:
