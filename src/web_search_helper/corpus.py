@@ -22,11 +22,14 @@ Two inputs:
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import os_helper as osh
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -129,5 +132,5 @@ def read_corpus(path: str | Path, target_words: int = 220) -> list[Passage]:
         passages = read_jsonl(path)
     else:
         passages = passages_from_markdown(path.read_text(encoding="utf-8"), path.name, target_words)
-    osh.info(f"{path}: {len(passages)} passages read")
+    logger.info(f"{path}: {len(passages)} passages read")
     return passages

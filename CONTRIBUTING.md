@@ -91,12 +91,10 @@ the full standard is [`CODING.md`](CODING.md)):
 4. **Generous comments.** Explain the *why* and any non-obvious *how*.
    Comments above blocks, not redundant inline. Cite the trade-off when
    picking an algorithm or backend.
-5. **No bare `print(...)` in `.py` code.** Use `os_helper`'s logging
-   surface (`osh.info(...)` / `osh.warning(...)` / `osh.error(...)` /
-   `osh.debug(...)`), so verbosity is controlled centrally via
-   `osh.verbosity(level)`. File management (directories, copies, existence
-   checks, temporary files) goes through `os_helper` too. The CLI's own
-   results are written with `click.echo`. **Docs (README, LISEZMOI,
+5. **No bare `print(...)` in `.py` code.** Each module that logs declares
+   `logger = logging.getLogger(__name__)` at the top and calls `logger.info(...)`;
+   the entry point alone configures logging (`osh.init_logging(...)`), and
+   `osh.verbosity(level)` tunes it. **Docs (README, LISEZMOI,
    EXAMPLES.md, docstring examples) keep `print(...)`**: tutorial code reads
    naturally that way.
 6. **`print(...)` in docs is followed by a `#`-comment showing expected

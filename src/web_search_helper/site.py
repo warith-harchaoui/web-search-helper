@@ -14,6 +14,7 @@ dotfiles, a file left halfway); the page still displays.
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import time
 import urllib.error
@@ -24,6 +25,8 @@ from pathlib import Path
 import os_helper as osh
 
 from .index import HEADER
+
+logger = logging.getLogger(__name__)
 
 ASSETS = ("search.php", "web-search.js", "web-search.d.ts", "writer-plan.json")
 DENY = """# web-search-helper: nothing in this folder is served.
@@ -78,7 +81,7 @@ def install(
             1,
         )
         wrapper.write_text(body, encoding="utf-8")
-    osh.info(f"installed into {site}: {len(written)} files")
+    logger.info(f"installed into {site}: {len(written)} files")
     return written
 
 

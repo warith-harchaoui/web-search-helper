@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import sys
 from pathlib import Path
 
 import click
-import os_helper as osh
 
 from . import __version__
+
+logger = logging.getLogger(__name__)
 
 
 def _embedder(model: str, browser: str | None):
@@ -193,13 +195,13 @@ def bench(index, runs, question, budget_ms):
     r = run(index, runs, question)
     click.echo(json.dumps(r, indent=2))
     if r.get("slowing_extensions"):
-        osh.warning(
+        logger.warning(
             f"warning: {', '.join(r['slowing_extensions'])} loaded; it slows PHP loops several "
             "times over and is rarely on a production server. Measure there too "
             "(check-online reports the endpoint's time)."
         )
     if r["search_ms_median"] > budget_ms:
-        osh.error(
+        logger.error(
             f"median {r['search_ms_median']:.0f} ms is over the {budget_ms:g} ms budget: "
             "time to consider an approximate index (see ann-router)."
         )

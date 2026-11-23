@@ -34,6 +34,7 @@ reads: the lexical index, the section centroids, the window offsets.
 from __future__ import annotations
 
 import json
+import logging
 import struct
 from dataclasses import dataclass, field
 from itertools import pairwise
@@ -47,6 +48,8 @@ from .embed import Embedder, window_texts
 from .moderation import compile_rule, default_moderation
 from .text import stopwords as default_stopwords
 from .text import tokenize
+
+logger = logging.getLogger(__name__)
 
 #: Requested by URL, the file answers 404 and stops. ``search.php`` checks the
 #: same bytes before reading.
@@ -319,7 +322,7 @@ def save(idx: Index, path: str | Path) -> Path:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_bytes(to_bytes(idx))
     tmp.replace(path)
-    osh.info(f"index written: {path} ({len(idx.passages)} passages, {len(idx.vectors)} windows)")
+    logger.info(f"index written: {path} ({len(idx.passages)} passages, {len(idx.vectors)} windows)")
     return path
 
 

@@ -2,12 +2,20 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-23
+
 ### Added
 
 - Unacceptable questions are refused before any search, in two layers. The screen, always on and carried by the index (`meta["moderation"]`, from `assets/moderation.json`), lists words and phrases abusive in every context, never subjects. The LLM judge runs on the server when `search-data/judge.php` configures an OpenAI-compatible endpoint (verdicts cached a day under a salted hash, after the quota; `fail` open or closed), in the Python door through `WSH_JUDGE_*`, and in the browser, where the writer's model judges the question before writing (`Writer.judge`). The answer is `{"sure": false, "refused": "moderation" | "judge", "terms": []}`; `WebSearch.ask` stops there and `mount` says why. `moderation.py` is the Python twin; `tests/test_moderation.py` runs the screen and a fake judge through both twins. Indexes built before this version carry no screen: rebuild them.
 - Rules, a rudimentary judge in pure PHP: `moderation.json` lists, per language, a target and a stance that refuse a question together (prejudice, sexual request, weapon or drug how-to, harassment how-to, genocide denial, Nazi praise, wished harm), with a critical framing as the way out. They are compiled at build time into expressions read alike by Python's `re` and PCRE, carried by the index, and run by `screen` in both twins. 40/40 on the labelled questions, 50/50 on fresh ones, none of the 55,000 sentences of a book corpus refused.
 
 - Every command line ends its `--help` on one line, after a blank one: `⭐️ on GitHub: https://github.com/warith-harchaoui/web-search-helper`. A test checks it for each console script. README.md and LISEZMOI.md carry one invitation to star the repository, right after the paragraph that says what the tool does.
+
+### Changed
+
+- Every module that logs declares `logger = logging.getLogger(__name__)` at the top and logs through it instead of `osh.info(...)`, so each record carries the module's dotted name rather than `os_helper`, and a CLI that configures its own package logger now sees them. Logging is still configured only in the entry point.
+- CODING.md and CONTRIBUTING.md state the logging rule (a module logger, configuration only in the entry point) and the modern typing syntax (`list[dict]`, `str | None`).
+- ruff names its rules instead of relying on its default set, and selects UP006/UP007/UP035/UP045 (modern typing syntax).
 
 ## [0.3.0] — 2026-11-16
 
